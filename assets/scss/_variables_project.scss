@@ -1,0 +1,114 @@
+/*
+
+Overrides and definitions to support vertica-doc additions to the docsy
+template. 
+
+*/
+
+/*----------------------------------------------------------------------------------------------*/
+// Custom Vertica variables and overrides
+//
+// Docsy overrides Bootstrap 4 variables for default styling. This page overrides Docsy
+// variables for custom styling.
+// 
+// If you cannot find a Docsy style variable to override, check in Bootstrap 4. Find Docsy 
+// and Bootstrap variables in the following locations:
+//
+// Docsy:
+//   - (locally) <project-name>/themes/docsy/assets/scss/_variables.scss
+//   - https://github.com/google/docsy/blob/main/assets/scss/_variables.scss
+// 
+// Bootstrap 4:
+//   - https://github.com/twbs/bootstrap/blob/v4-dev/scss/_variables.scss
+//
+/*----------------------------------------------------------------------------------------------*/
+
+
+/*----------------------------------------------------------------------------------------------*/
+// MicroFocus color palate
+// 
+// https://www.microfocus.com/brandcentral/microfocus/download/mf-color-palette.pdf
+// 
+// NOTE: Colors are commented out because they are not currently in use, but might be useful 
+// before styles are complete.
+//
+/*----------------------------------------------------------------------------------------------*/
+  
+/* Corporate Color palette */
+$mf-blue: #0079EF;
+$mf-blue-w3c: #0073E7;
+$mf-purple: #7425AD;
+$mf-silver: #BDBEC0;
+$mf-crimson-negative: #E5004C;
+$mf-apricot: #F48B34;
+
+/* $mf-blue-w3c-light: lighten($mf-blue-w3c, 90%) !default; */
+// $mf-blue-w3c-light: #e3f1ff;
+// $mf-midnight: #02003C;
+// $mf-dark-blue: #231CA5;
+
+/* $mf-purple-light: lighten($mf-purple, 90%) !default; */
+// $mf-purple-light: #f2e6fa;
+// $mf-pink: #C6179D;
+// $mf-pink-light: #fce5f7;
+
+/* $mf-pink-light: lighten($mf-pink, 90%) !default;*/
+// $mf-aqua: #29CEFF;
+// $mf-aqua-light: #eafaff;
+
+/* $mf-aqua-light: lighten($mf-aqua, 90%) !default; */
+// $mf-aquamarine: #2FD6C3;
+// $mf-lime: #86DA64;
+// $mf-slight-grey: #F5F7F8;
+// $mf-bright-grey: #ECEEEF;
+// $mf-grey: #DCDEDF;
+// $mf-dim-grey: #656668;
+// $mf-dark-grey: #323435;
+// $mf-crimson-negative-light: #ffe3ec;
+/* $mf-crimson-negative-light: lighten($mf-crimson-negative, 90%) !default; */
+
+// $mf-apricot-light: #fef3eb;
+/* $mf-apricot-light: lighten($mf-apricot, 90%) !default; */
+// $mf-yellow: #FCDB1F;
+// $mf-yellow-light: #fffbe9;
+/* $mf-yellow-light: lighten($mf-yellow, 90%) !default; */
+// $mf-green-positive: #1AAC60;
+// $mf-green-positive-light: #e4fbef;
+/* mf-green-positive-light: lighten($mf-green-positive, 90%) !default; */
+
+/*----------------------------------------------------------------------------------------------*/
+// Vertica overrides
+//
+/*----------------------------------------------------------------------------------------------*/
+$primary: $mf-blue-w3c;
+$link-color: $mf-blue;
+$link-hover-color: darken($link-color, 15%);
+$link-hover-decoration: underline;
+
+// copied from _variables.scss for use in _styles_project.scss
+$font-size-base: 1rem;
+
+// max-width of main content in largest media query. Default is 80%
+$max-width: 90%;
+
+/*----------------------------------------------------------------------------------------------*/
+// Admonition colors
+// 
+// Each admonition is assigned a variable from the microfocus color palate
+// so that future branding changes are made in one place.
+//
+/*----------------------------------------------------------------------------------------------*/
+$important: $mf-apricot;
+$note: $mf-blue;
+$tip: $mf-purple;
+$warning: $mf-crimson-negative;
+$caution: $mf-crimson-negative;
+$deprecated: $mf-silver;
+
+// Uses the default h4 font size
+$admonition-title: $font-size-base * 1.35;
+
+
+
+// Landing page max width
+$landing-max-width: 1080px;

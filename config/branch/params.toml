@@ -1,0 +1,16 @@
+# Whether to enable commenting system
+enable_comments = true
+
+
+# Disable Lunr.js offline search
+offlineSearch = false
+
+
+[conditions]
+# These values control the conditional text. By default, the conditionals only appear in the output
+# if you set the value to "show". Any other value (including "hide") results in the conditional
+# content being hidden.
+  "commenting" = "show"
+  "hidden" = "hide"
+  "future" = "hide"
+  "printonly" = "hide"  # Turn this on for PDF builds.

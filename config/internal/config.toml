@@ -1,0 +1,5 @@
+# baseURL = "http://doc-build1.verticacorp.com/style-guide"
+title = "Vertica Integrators Guide"
+relativeURLs = true
+canonifyURLs = true
+# publishDir = "/home/ggray/hugo-out/style-guide"

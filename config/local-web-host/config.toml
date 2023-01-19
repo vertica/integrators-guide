@@ -1,0 +1,6 @@
+# baseURL = "http://localhost/~ggray/vertica-doc"
+title = "Vertica Integrator's Guide"
+relativeURLs = true
+canonifyURLs = true
+# publishDir = "/home/ggray/public_html/vertica-doc/"
+uglyurls = true

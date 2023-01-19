@@ -1,0 +1,168 @@
+# Uncomment this line to have Hugo warn us about fixmes in the source code.
+# showfixmes = true
+includes_dir = "_includes"
+copyright = "Micro Focus Vertica"
+privacy_policy = "https://policies.google.com/privacy"
+
+
+# Whether to enable commenting system
+enable_comments = false
+
+# First one is picked as the Twitter card image if not set on page.
+# images = ["images/project-illustration.png"]
+
+# Menu title if your navbar has a versions selector to access old versions of your site.
+# This menu appears only if you have at least one [params.versions] set.
+version_menu = "Releases"
+
+# Flag used in the "version-banner" partial to decide whether to display a 
+# banner on every page indicating that this is an archived version of the docs.
+# Set this flag to "true" if you want to display the banner.
+archived_version = false
+
+# A link to latest version of the docs. Used in the "version-banner" partial to
+# point people to the main doc site.
+url_latest_version = "https://example.com"
+
+# Repository configuration (URLs for in-page links to opening issues and suggesting changes)
+github_repo = "http://http://git.verticacorp.com/projects/DOCS/repos/style-guide-hugo"
+# An optional link to a related project repo. For example, the sibling repository where your product code lives.
+# github_project_repo = "https://github.com/google/docsy"
+
+# Specify a value here if your content directory is not in your repo's root directory
+# github_subdir = ""
+
+# Uncomment this if you have a newer GitHub repo with "main" as the default branch,
+# or specify a new value if you want to reference another branch in your GitHub links
+# github_branch= "main"
+
+# Google Custom Search Engine ID. Remove or comment out to disable search.
+# gcs_engine_id = "d72aa9b2712488cc3"
+
+# Enable Algolia DocSearch
+algolia_docsearch = false
+
+# Enable Lunr.js offline search
+offlineSearch = false
+
+# Enable syntax highlighting and copy buttons on code blocks with Prism
+prism_syntax_highlighting = true
+
+# User interface configuration
+[ui]
+#  Set to true to disable breadcrumb navigation.
+breadcrumb_disable = false
+# Set to true to disable the About link in the site footer
+footer_about_disable = false
+# Set to false if you don't want to display a logo (/assets/icons/logo.svg) in the top navbar
+navbar_logo = true
+# Set to true if you don't want the top navbar to be translucent when over a `block/cover`, like on the homepage.
+navbar_translucent_over_cover_disable = false
+# Enable to show the side bar menu in its compact state.
+sidebar_menu_compact = true
+# VERY IMPORTANT: this setting controls whether the side navigation gets cached during site generation. 
+# We need the sidebar not to be cached. Caching the sidebar breaks the the overrides made to the sidebar-tree.
+# html partial that prevents Hugo from outputting a TOC containing every single topice. That becomes really
+# huge. When the sidebar nav is chanced, the lower-level entries do not get generated, which breaks the TOC
+# overall. Set this value to a value far greater than the number of pages in the project.
+sidebar_cache_limit = 20000
+# Set to true to hide the sidebar search box (the top nav search box will still be displayed if search is enabled)
+sidebar_search_disable = false
+
+# This setting ends up truncating a section menu (aka TOC) at a specific value. This is... shall we say
+# suboptimal for a documentation set. Directories with many pages (like many related functions) end 
+# up losing pages. Not terribly great. The default for this value is 50, which results in missing entries for 
+# later elements in the SQL reference section. If you find the TOC starts losing elements, maybe bump this value 
+# up.
+# See https://github.com/google/docsy/pull/475
+# Fun fact: aside from that PR, this param isn't documented anyplace. Awesome!
+sidebar_menu_truncate = 200
+
+# Adds a H2 section titled "Feedback" to the bottom of each doc. The responses are sent to Google Analytics as events.
+# This feature depends on [services.googleAnalytics] and will be disabled if "services.googleAnalytics.id" is not set.
+# If you want this feature, but occasionally need to remove the "Feedback" section from a single page,
+# add "hide_feedback: true" to the page's front matter.
+[ui.feedback]
+enable = true
+# The responses that the user sees after clicking "yes" (the page was helpful) or "no" (the page was not helpful).
+yes = 'Glad to hear it! Please <a href="https://github.com/USERNAME/REPOSITORY/issues/new">tell us how we can improve</a>.'
+no = 'Sorry to hear that. Please <a href="https://github.com/USERNAME/REPOSITORY/issues/new">tell us how we can improve</a>.'
+
+# Adds a reading time to the top of each doc.
+# If you want this feature, but occasionally need to remove the Reading time from a single page, 
+# add "hide_readingtime: true" to the page's front matter
+[ui.readingtime]
+enable = false
+
+[links]
+# End user relevant links. These will show up on left side of footer and in the community page if you have one.
+#[[links.user]]
+#  name = "User mailing list"
+#  url = "https://example.org/mail"
+#  icon = "fa fa-envelope"
+#  desc = "Discussion and help from your fellow users"
+#[[links.user]]
+#  name ="Twitter"
+#  url = "https://example.org/twitter"
+#  icon = "fab fa-twitter"
+#  desc = "Follow us on Twitter to get the latest news!"
+#[[links.user]]
+#  name = "Stack Overflow"
+#  url = "https://example.org/stack"
+#  icon = "fab fa-stack-overflow"
+#  desc = "Practical questions and curated answers"
+# Developer relevant links. These will show up on right side of footer and in the community page if you have one.
+#[[links.developer]]
+#  name = "GitHub"
+#  url = "https://github.com/google/docsy"
+#  icon = "fab fa-github"
+#  desc = "Development takes place here!"
+
+
+[taxonomy]
+# set taxonomyCloud = [] to hide taxonomy clouds
+taxonomyCloud = ["tags", "categories"] 
+
+# If used, must have same lang as taxonomyCloud
+taxonomyCloudTitle = ["Tag Cloud", "Categories"] 
+
+# set taxonomyPageHeader = [] to hide taxonomies on the page headers
+taxonomyPageHeader = ["tags", "categories"] 
+
+[conditions]
+# These values control the conditional text. By default, the conditionals only appear in the output
+# if you set the value to "show". Any other value (including "hide") results in the conditional
+# content being hidden.
+  "commenting" = "hide"
+  "hidden" = "hide"
+  "future" = "hide"
+  "printonly" = "hide"  # Turn this on for PDF builds.
+  "screenonly" = "show"
+
+
+# Parameters specific to Vertica. Ported over from Flare variables.
+[vertica]
+    "dbms_full" = "Vertica Analytics Platform"
+    "install_script" = "install_vertica"
+    "install_script_full" = "/opt/vertica/sbin/install_vertica"
+    # Note: we should replace the following with just a static filename and the 
+    # version number param. We're likely not going to change the filname any time
+    # soon, but we do need to replace the version number regularly.
+    "rhel5_64" = "vertica-11.1.x.x86_64.RHEL6.rpm"
+    "license_key" = "vlicense.dat"
+    "maxcomplextypesdepth" = "100"
+    "port" = "5433"
+    "maxtablecolumns" = "9800"
+    "maxfunctionarguments" = "9800"
+    "max_string_length" = "65000"
+    "jdbc_path" = "/opt/vertica/java/lib"
+    "lib64_path" = "/opt/vertica/lib64"
+    "lib32_path" = "/opt/vertica/lib"
+    "dba_kerb_principal" = "vertica"
+    "corporate_address_1" = "150 CambridgePark Drive"
+    "corporate_address_2" = "Cambridge, MA 02140"
+    "corporate_phone_1" = "+1 617 386 4400"
+    "corporate_email_1" = "contactvertica@microfocus.com"
+    "corporate_website" = "http://www.vertica.com"
+    "genericsnippetvariable1" = "Set Snippet Variable Value in Topic"
+    "vsql_welcome" = "Welcome to vsql, the Vertica Analytic Database interactive terminal."

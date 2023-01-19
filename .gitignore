@@ -1,0 +1,8 @@
+/themes/
+.hugo_build.lock
+/public/
+/resources/_gen/
+
+.vscode/*
+
+*~

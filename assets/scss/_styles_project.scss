@@ -1,0 +1,451 @@
+/*
+
+Overrides/additions to the theme styles go here.
+
+*/
+
+/**----------------------------------------------------------------------------
+ * Custom Vertica styles and overrides
+ *
+ * For overrides, use same units as original value. Otherwise use existing 
+ * variable units or the following:
+ * - px for borders only
+ * - em for padding
+ * - rem for margin, fonts
+ * 
+ * If you cannot find a Docsy style to override, check in Bootstrap 4. Find Docsy 
+ * and Bootstrap styles in the following locations:
+ *
+ * Docsy:
+ *   - (locally) <project-name>/themes/docsy/assets/scss/_styles_project.scss
+ *   - https://github.com/google/docsy/blob/main/assets/scss/_styles_project.scss
+ * 
+ * Bootstrap 4:
+ *   - https://github.com/twbs/bootstrap/tree/v4-dev/scss
+ *---------------------------------------------------------------------------*/
+
+
+
+ 
+/**----------------------------------------------------------------------------
+ * Global
+ * 
+ * td-content is the class assigned to the top-level div in <main>
+ *---------------------------------------------------------------------------*/
+
+
+
+// All direct children of the main content container can only expand to max width
+.td-content {
+  @include media-breakpoint-up(lg) {
+    > * {
+      max-width: $max-width;
+    }
+  }
+}
+
+// Override nested list styles to use disc all the time
+.td-content {
+  ul {
+    list-style-type: disc;
+  }
+}
+
+/* Bootstrap messed with DL lists for some reason. Unset doesn't clear this, so 
+manually set an indent. */
+dd {
+  margin-left: 3em;
+}
+
+/**----------------------------------------------------------------------------
+ * Media queries
+ * 
+ *---------------------------------------------------------------------------*/
+
+// Overrides style at bottom of following page:
+// https://github.com/google/docsy/blob/main/assets/scss/support/_utilities.scss
+.td-max-width-on-larger-screens {
+  @include media-breakpoint-up(lg) {
+      max-width: $max-width;
+  }
+}
+
+/**----------------------------------------------------------------------------
+ * Admonitions
+ *
+ * Custom Vertica styles
+ * 
+ * Each admonition uses the admonition mixin and passes the corresponding color.
+ *---------------------------------------------------------------------------*/
+
+
+@mixin admonition($color) {
+  margin: 1rem 0;
+  padding: 1em;
+  border-left: 10px solid $color;
+  background-color: scale-color($color, $lightness: 90%);
+  border-top-left-radius: $border-radius;
+  border-bottom-left-radius: $border-radius;
+
+  .admonition-head {
+    color: $color;
+    text-transform: capitalize;
+    font-weight: $font-weight-bold;
+    font-size: $admonition-title;
+  }
+  
+  .amonition-content {
+    padding: 0.5em 0.5em 0.5em 0;
+  }
+}
+
+.important {
+  @include admonition($important);
+}
+
+.note {
+  @include admonition($note);
+}
+
+.tip {
+  @include admonition($tip);
+}
+
+.warning {
+  @include admonition($warning);
+}
+
+.caution {
+  @include admonition($caution);
+}
+
+// TODO
+.deprecated {
+  @include admonition($deprecated);
+  .admonition-head {
+    color: #000;
+  }
+}
+
+
+/**----------------------------------------------------------------------------
+ * Links
+ * 
+ * Custom Vertica styles
+ *---------------------------------------------------------------------------*/
+.td-content {
+  a:visited {
+    color: $mf-purple;
+  }
+}
+
+/**----------------------------------------------------------------------------
+ * Top navbar
+ *                    
+ * These styles were copied from themes/docsy/assets/scss/_nav.scss and  maintained
+ *    at https://github.com/google/docsy/blob/main/assets/scss/_nav.scss 
+ *---------------------------------------------------------------------------*/
+
+.td-navbar {
+
+  .navbar-brand {
+
+      // Revisit this fix. Cannot find correct nav style to override.
+      svg {
+          display: inline-block;
+          margin: 0 0 0 -6.25rem; // override margin: 0 10px;
+          height: 40px; // override 30px
+      }
+  }
+}
+
+
+/**----------------------------------------------------------------------------
+ * Left-hand sidebar
+ *                    
+ * These styles were copied from themes/docsy/assets/scss/_nav.scss and  maintained
+ *    at https://github.com/google/docsy/blob/main/assets/scss/_nav.scss 
+ *---------------------------------------------------------------------------*/
+
+// Caret appearance overrides. Uses a '>' and lightens color
+// Docsy uses font awesome icons https://fontawesome.com/icons/angle-right?s=solid
+nav.foldable-nav {
+
+  .ul-1 .with-child > label:before {
+      font-family: "Font Awesome 5 Free"; font-weight: 900; content: "\f105"; // override '\f0da'
+      color: $gray-700; // override $gray-900
+  }
+}
+
+// Caret behavior overrides
+@media (hover: hover) and (pointer: fine) {
+    
+    nav.foldable-nav {
+
+        .ul-1 .with-child > label:hover:before { 
+            transform: none;              // override 30deg
+            transition: transform 0s;   // override 0.5s
+        }
+
+        .ul-1 .with-child > input:checked ~ label:hover:before { 
+            color: $primary;
+            transform: rotate(90deg) !important;    // override rotate(60deg) !important
+            transition: transform 0s;               // override 0.5s 
+        }
+    }
+}
+
+// Override color, weight, and hover for 
+// These styles were copied from themes/docsy/assets/scss/_sidebar-tree.scss and 
+// maintained at https://github.com/google/docsy/blob/main/assets/scss/_sidebar-tree.scss
+.td-sidebar-nav {
+
+  .td-sidebar-link {
+
+      &__page {
+          color: $black;  // override $gray-700
+          font-weight: $font-weight-medium; // override $font-weight-light
+      }
+  }
+
+  a {
+      &:hover {
+          color: $primary; // override $blue
+      }
+  }
+}
+
+
+/**----------------------------------------------------------------------------
+ * Right-hand sidebar                         
+ *
+ * These styles were copied from themes/docsy/assets/scss/_sidebar-toc.scss and 
+ * maintained at https://github.com/google/docsy/blob/main/assets/scss/_sidebar-toc.scss
+ *---------------------------------------------------------------------------*/
+
+
+.td-toc {
+
+  a {
+      font-weight: $font-weight-medium; // override $font-weight-light
+  }
+
+  #TableOfContents {
+
+      a {
+          color: $black;  // override $gray-600
+
+          &:hover {
+              color: $primary;  // override $blue
+          }
+      }
+  }
+}
+
+
+/**----------------------------------------------------------------------------
+ * Tables                         
+ *
+ * Docsy inherits table styles from Bootstrap 4. Table styles are maintained at 
+ * https://github.com/twbs/bootstrap/blob/v4-dev/scss/_tables.scss
+ * 
+ *---------------------------------------------------------------------------*/
+
+.table {
+  width: 100%;
+  margin-bottom: $spacer;
+  color: $table-color;
+  background-color: $table-bg; // Reset for nesting within parents with `background-color`.
+
+  // this th section is an override
+  th {
+    color: $black;
+    border-top: 2px solid $black;
+    border-bottom: 2px solid $black;
+
+    > p {
+      margin: 0;
+      font-weight: $font-weight-bold;
+    }
+  }
+
+  // added custom td section
+  td {
+    border-top:  $table-border-width solid $table-border-color;
+    border-bottom:  $table-border-width solid $table-border-color;
+  }
+
+  th,
+  td {
+    padding: $table-cell-padding;
+    vertical-align: top;
+  }
+
+  tbody + tbody {
+    border-top: (2 * $table-border-width) solid $table-border-color;
+  }
+
+  // custom admonition override styles
+  .admonition {
+    border-left: 0;
+    border-radius: $border-radius;
+    padding: .5em .5em .5em 1em;
+    .content {
+      padding: 0;
+    }
+  }
+}
+
+// Removes left and right table borders
+.table-bordered {
+  border: none; // overrides border: $table-border-width solid $table-border-color;
+
+  th,
+  td {
+    // overrides border: $table-border-width solid $table-border-color;
+    border-right: none;
+    border-left: none;
+  }
+}
+
+// Fix for fonts in {{% pre %}} not matching the fonts in Markdown examples.
+.table-pre {
+  font-size: 1rem;
+}
+  
+
+// Override zebra-stiped rows
+.table-striped {
+  tbody tr:nth-of-type(#{$table-striped-order}) {
+    background-color: $white; // override
+  }
+}
+
+/**----------------------------------------------------------------------------
+ * Code
+ *
+ * These styles were copied from themes/docsy/assets/scss/_code.scss and 
+ * maintained at https://github.com/google/docsy/blob/main/assets/scss/_code.scss
+ *---------------------------------------------------------------------------*/
+
+.td-content {
+
+    // Inline code
+    p code, li > code, table code {
+        padding: 0.2em 0; // override 0.2em 0.4em
+        font-size: 100%; // override 85%
+        background-color: transparent; // override rgba($black, 0.05)
+        white-space: pre;  // no line breaks within code tags
+    }
+
+
+    // Code blocks
+    pre {
+        background-color: $gray-200; // override 100
+
+        > code {
+            font-size: $font-size-base; // override 100%
+        }
+    }
+}
+
+// Style that indicates a variable in a literal/code content
+.code-variable {
+  font-family: $font-family-monospace;
+  font-style: italic;
+}
+
+.code-input {
+  font-family: $font-family-monospace;
+  font-weight: bold;
+}
+
+/**----------------------------------------------------------------------------
+ * Tabs
+ * 
+ * Custom Vertica styles
+ *---------------------------------------------------------------------------*/
+
+.nav-tabs > .nav-item {
+  list-style-type: none;
+}
+
+.tab-body {
+  background-color: transparent;
+}
+
+
+/**----------------------------------------------------------------------------
+ * Landing page
+ *
+ *---------------------------------------------------------------------------*/
+
+//  Prevent grid from expanding too much (using xl grid-breakpoint)
+.grid {
+  max-width: $landing-max-width;
+ }
+
+//  Display one column for mobile
+.landing-row {
+  display: grid;
+  grid-template-columns: 1fr;
+  column-gap: 1rem;
+}
+
+//  Display two columns when LTOC collapses
+@include media-breakpoint-up(sm) {
+  .landing-row {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+//  Display three columns of tiles for large devices
+@include media-breakpoint-up(md) {
+  .landing-row {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.landing-row{
+  a:visited {
+    color: $link-color;
+  }
+}
+
+// Tile styles
+.landing-tile {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 1.5rem;
+  padding: 1em 2em;
+  border: 1px solid $mf-silver;
+  border-radius: 5px;
+  text-decoration: none;
+  cursor: pointer;
+
+  box-shadow: 0 0.25em 0.5em -0.4em rgb(0, 0, 0 / 0.2);
+
+
+  .tile-content {
+    flex: 1;
+
+    p {
+      // same color as Docsy test. Maybe make variable
+      color: #222; 
+    }
+  }
+
+  &:hover,
+  &:focus {
+    // transition: all 0.2s ease-in-out;
+    // transform: translateY(-0.25em);
+    // box-shadow: 0 0.25em 0.5em -0.4em rgb(0, 0, 0 / 0.2);
+    text-decoration: none;
+    // background-color: #fff;
+    color: $link-hover-color;
+
+    h3 {
+      text-decoration: $link-hover-decoration;
+    }
+  }
+}

@@ -1,0 +1,8 @@
+# Language configuration
+
+[en]
+# title = "Vertica Integrators Guide"
+# description = "Vertica Integrators Guide"
+languageName ="English"
+# Weight used for sorting.
+weight = 1

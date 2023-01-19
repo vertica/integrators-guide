@@ -1,0 +1,153 @@
+Thank you for contribuing to the Vertica Integrator's Guide! This document guides you through the contribution process.
+
+# Bug reports
+
+If you find a bug or typo, submit an issue. If you opened an issue and then later resolved it on your own, comment on the issue and then close the issue.
+
+# Feature requests
+
+The Vertica team is always open to suggestions--please feel free to share your ideas about how to improve the Integrator's Guide. To provide suggestions, open an issue with details describing any features that you would like added or changed.
+
+# Documentation contributions
+
+The Vertica Integrator's Guide uses [Hugo](https://gohugo.io/) with a [Docsy theme](https://www.docsy.dev/) to render Markdown files as HTML.
+
+## Prerequisites
+
+This repository uses [Hugo-supported Markdown](https://www.markdownguide.org/tools/hugo/), so you can create or edit documentation in your favorite text editor.
+
+At minimum, you must [install git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git), with your [username](https://docs.github.com/en/get-started/getting-started-with-git/setting-your-username-in-git) and [email address](https://docs.github.com/en/account-and-profile/setting-up-and-managing-your-personal-account-on-github/managing-email-preferences/setting-your-commit-email-address) configured: 
+
+```shell
+$ git config --global user.name "Jane Smith"
+$ git config --global user.email "email@example.com"
+```
+
+### Optional authoring environment setup
+If you want to set up the complete authoring environment on your local machine, install the following depenencies:
+- [Go](https://go.dev/doc/install) (version 1.18+)
+- [Hugo extended package](https://gohugo.io/installation/)
+- [node version manager (nvm)](https://github.com/nvm-sh/nvm)
+- [Node.js](https://nodejs.org/en/download/)
+- [node pacakage manager (npm)](https://www.npmjs.com/)
+- [PostCSS](https://postcss.org/):
+  
+  ```shell
+  $ npm install -D autoprefixer
+  $ npm install -D postcss-cli
+  $ npm install -D postcss
+  ```
+
+### 1. Fork the project
+
+Fork the [project on Github](https://github.com/vertica/integrators-guide) and check out your copy locally:
+```shell
+$ git clone git@github.com:vertica/integrators-guide.git
+$ cd integrators-guide
+```
+
+Your GitHub repository is called _origin_ in git. You should also set up **vertica/integrators-guide** as an _upstream_ remote:
+
+```shell
+$ git remote add upstream git@github.com:vertica/integrators-guide.git
+$ git fetch upstream
+```
+
+### 2. Branch
+
+Create a new branch for your contribution. Use a descriptive name:
+
+```shell
+$ git checkout -b my-new-feature
+```
+
+### 3. Implement your fix or feature
+
+Documentation files are located in the `/content` directory. For edits or additions to existing documentation, locate the file and make the changes.
+
+
+
+#### Creating a section or topic
+
+For new documentation, use the following guidelines:
+- Name directories and files with [kebob case](https://en.wiktionary.org/wiki/kebab_case).
+- Each new directory must have an `_index.md` file that serves as a top-level table of contents page for the new section.
+- You must include [front matter](https://gohugo.io/content-management/front-matter/) at the top of each new markdown file. At minimum, the front matter must provide the title and weight.
+  For example, the following front matter is YAML-formatted and located at the top of the `/content/containers/_index.md` file:
+  ```yaml
+    ---
+    title: "Containerized Vertica"
+    linkTitle: "Containerized Vertica"
+    weight: 20
+    ---
+  ```
+  The `weight` value determines the order of the table of contents (TOC). For example, a topic with `weight: 20` is listed below a topic with `weight: 30`. Use multiples of 10, and consider the following:
+  - For `_index.md` files, `weight` determines where the the directory in the left-hand TOC.
+  - Any other `*.md` files, `weight` determines the topic placement in the right-hand TOC.
+
+#### Commits
+
+After you make changes on your branch, stage and commit as often as necessary:
+
+```shell
+$ git add .
+$ git commit -m 'Add new Dockerfile example'
+```
+
+When writing the commit message:
+- Describe precisely what the commit does.
+- Limit each line of the commit message to 72 characters.
+- Include the issue number `#N`, if the commit is related to an issue.
+
+#### Tests
+
+We test that the Hugo can build and serve the documentation. This test should take only a few moments.
+
+### 4. Push and Rebase
+
+Publish your work on GitHub:
+
+```shell
+$ git push origin my-new-feature
+```
+
+When you go to your GitHub page, you will notice that commits made on your local branch are pushed to the remote repository.
+
+After upstream (vertica/integrators-guide) updates, you should rebase your work. The **rebase** command creates a linear history by moving your local commits onto the tip of the upstream commits.
+
+Rebase your branch locally and force-push to your GitHub repository:
+
+```shell
+$ git checkout my-new-feature
+$ git fetch upstream
+$ git rebase upstream/main
+$ git push -f origin my-new-feature
+```
+
+
+### 5. Create a Pull Request
+
+When your work is ready to be pulled into the *vertica/integrators-guide*, create a pull request (PR) at GitHub.
+
+A good pull request has:
+ - commits with one logical change in each.
+ - well-formed messages for each commit.
+
+
+Go to your fork in GitHub, and [create a Pull Request](https://help.github.com/articles/creating-a-pull-request/) to `vertica:main`. 
+
+#### About CI
+Unit tests are run automatically for each commit in the PR. After you create the PR, you can run tests manually for each subsequent commit by selecting the workflow among the list in the **Actions** section of Github.
+
+#### Sign the CLA
+Before we accept a pull request, we ask contributors to sign a Contributor License Agreement (CLA) to confirm they have the right to donate the code. To electronically sign the CLA, follow the comment from **CLAassistant** on your pull request page. 
+
+#### Review
+Pull requests are usually reviewed within a few days. To address comments:
+1. Apply your changes in new commits.
+2. Rebase your branch and force-push to the same branch.
+3. Re-run the test suite to ensure that tests are still passing. 
+
+To produce a clean commit history, our maintainers do squash merging after your PR is approved. Squash merging combines all of your PR commits into a single commit in the master branch.
+
+After your pull request is merged, you can safely delete your branch and pull the changes from the upstream repository.

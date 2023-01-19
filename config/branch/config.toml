@@ -1,0 +1,16 @@
+# baseURL and publishdir are set by command line, per hugo repo config
+
+# baseURL = "http://doc-build1.verticacorp.com/style-guide"
+relativeURLs = true
+canonifyURLs = true
+# publishDir = "/tmp/style-guide"
+
+
+
+# Comment out if you don't want the "print entire section" link enabled.
+[outputs]
+section = ["HTML", "print", "RSS"]
+
+# Force everything to use doc page format
+[cascade]
+  type = "docs"
