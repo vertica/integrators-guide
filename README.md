@@ -1,5 +1,7 @@
 # Integrator's Guide
 
+A community repo for users that integrate with Vertica with provisioning, monitoring, management, storage, clients, loaders, and other tools.
+
 ## Todo
 - Images
 - Landing page redesign
