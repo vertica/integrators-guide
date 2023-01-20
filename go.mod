@@ -1,5 +1,5 @@
-module git.verticacorp.com/scm/docs/style-guide-hugo.git
+module github.com/vertica/integrators-guide
 
 go 1.17
 
-require github.com/google/docsy v0.4.0 // indirect
+require github.com/google/docsy v0.6.0 // indirect
