@@ -4,7 +4,7 @@ A community repo for users that integrate with Vertica with provisioning, monito
 
 ## Todo
 - Images
-- Landing page redesign
+- ~~Landing page redesign~~
 - README
 - ~~CONTRIBUTING.md~~
 - GH Actions with build test
