@@ -13,7 +13,7 @@ For additional guidance, refer to the [Dockerfile](https://github.com/vertica/ve
 ## Prerequisites
 
 - Hardware or virtual machine with a container engine
-- Vertica 11.0.0 or higher RPM
+- Vertica 11.0.1 or higher RPM
 - Local clone of the [vertica-kubernetes GitHub
   repository](https://github.com/vertica/vertica-kubernetes)
 
@@ -55,6 +55,11 @@ When the MINIMAL argument is set to YES, the Dockerfile builds a smaller image. 
 ARG MINIMAL=""
 ```
 
+We use [s6](https://github.com/just-containers/s6-overlay) as the init program. This argument allows you to choose the version of that program. This version refers to one of the GitHub releases on the s6 [GitHub repository](https://github.com/just-containers/s6-overlay).
+```
+ARG S6_OVERLAY_VERSION=3.1.2.1
+```
+
 # First Stage
 
 The first stage is named **builder**. The **builder** stage generates the /opt/vertica directory structure by downloading the required packages and dependencies, then running the Vertica installer. The `FROM` command sets the base image for the **builder** and initiates the build of that stage. The `BUILDER_OS_VERSION` was previously selected as the image version to use for this stage. The following `FROM` command assigns the name **builder** to the first stage in the multistage build:
@@ -86,22 +91,29 @@ ARG DBADMIN_UID=5000
 
 ## Adding Files
 
-The `ADD` instruction copies files from the host filesystem into the container filesystem.
+The `COPY` instruction copies files from the host filesystem into the container filesystem.
 
-The following `ADD` instruction copies your Vertica RPM to the container's `/tmp` folder. This is used to install Vertica in the container:
+The following `COPY` instruction copies your Vertica RPM to the container's `/tmp` folder. This is used to install Vertica in the container:
 
 ```
-ADD ./packages/$VERTICA_RPM /tmp/
+COPY ./packages/$VERTICA_RPM /tmp/
 ```
 
-The following `ADD` instructions add bash scripts that clean up your image and reduce its size. They are available in the `vertica-kubernetes/docker-vertica/packages` folder:
+The following `COPY` instructions add bash scripts that clean up your image and reduce its size. They are available in the `vertica-kubernetes/docker-vertica/packages` folder:
 
 - **cleanup.sh** strips debugging symbols from the libraries in   `/opt/vertica/packages` directory, decreasing the image size. If you   set `ARG MINIMAL=YES`, this script removes any packages that are not   installed automatically, such as Tensorflow.
 - **package-checksum-patcher.py** patches the library installers to use   new checksums that **cleanup.sh** created when removing the debugging   symbols.
 
 ```
-ADD ./packages/cleanup.sh /tmp/  
-ADD ./packages/package-checksum-patcher.py /tmp/
+COPY ./packages/cleanup.sh /tmp/  
+COPY ./packages/package-checksum-patcher.py /tmp/
+```
+
+The following `COPY` instructions add config files for sshd and ssh. These config files are used to ensure all environment variables are passed and accepted from the ssh client to the ssh server. This is needed so that when we start vertica, environment variables that are set in the pod are picked up by the server.
+
+```
+COPY ./packages/10-vertica-sshd.conf /etc/ssh/sshd_config.d/10-vertica-sshd.conf
+COPY ./packages/10-vertica-ssh.conf /etc/ssh/ssh_config.d/10-vertica-ssh.conf
 ```
 
 ## Installing Dependencies
@@ -208,20 +220,12 @@ Run the `cleanup.sh` script to reduce the size of the final image:
   && sh /tmp/cleanup.sh
 ```
 
-## Prepare the Entrypoint Script
+## Prepare the static ssh keys
 
-The `vertica-kubernetes/docker-vertica/docker-entrypoint.sh` scriptrequires the following files in the container to execute properly:
-
+We use static SSH key for the dbadmin id. This is required so that if the environment runs multiple versions of the image, then all nodes can communicate through SSH.
 ```
-COPY dbadmin/.bash_profile /home/dbadmin/  
 COPY dbadmin/.ssh /home/dbadmin/.ssh  
-COPY ./docker-entrypoint.sh /opt/vertica/bin/
 ```
-In the previous command:
-
-- **.bash_profile**: Add the .bash_profile to /home/dbadmin
-- **dbadmin/.ssh**: Add static SSH keys to /home/dbadmin. Static keys  are requires so that if the environment runs multiple versions of the  image, then all nodes can communicate through SSH.
-- **docker-entrypoint.sh**: Add the entrypoint script to vertica/bin
 
 ## Configure Container Network and Access Privileges
 
@@ -232,22 +236,6 @@ Add `RUN set -x` to log each command to the console as it is executed:
 ```
 RUN set -x \
 ```
-
-### Configuring Container Network and Access Privileges
-
-Use **&&** to chain instructions to the `RUN` command. Be sure to indent the following lines 2 spaces further than the `RUN set -x` command:
-
-```
-  && chmod a+x /opt/vertica/bin/docker-entrypoint.sh \  
-  && chown dbadmin:verticadba /home/dbadmin/.bash_profile \  
-  && chmod 600 /home/dbadmin/.bash_profile \
-```
-
-The commands in the previous example:
-
-- Make the docker-entrypoint.sh script executable
-- Provide the dbadmin ownership of the files created by the image
-- Restrict access to the dbadmin's .bash_profile
 
 ### Copy SSH Keys
 
@@ -261,17 +249,13 @@ The following commands copy the static SSH key to use for root and ensures all k
   && mkdir -p /home/dbadmin/.ssh \  
   && chmod 600 /home/dbadmin/.ssh/* \
 ```
-### Ensure proper ownership
+### Ensure proper ownership and permissions
 
-Ensure that everything under /home/dbadmin has the correct ownership:
+Ensure everything under /home/dbadmin has the correct ownership. And the ssh config files are correct permissions.
 
 ```
   && chown -R dbadmin:verticadba /home/dbadmin/ \
-```
-On Docker versions 19 and earlier, ownership of the opt/vertica is not preserved in the COPY statement in the second stage of the image build. The following command makes this directory and its files are read and write ownership:
-
-```
-  && chmod 777 -R /opt/vertica
+  && chmod go-w /etc/ssh/sshd_config.d/* /etc/ssh/ssh_config.d/*
 ```
 
 # Second Stage
@@ -313,21 +297,24 @@ Select the Java runtime version to install. This must correspond with a package 
 ARG JRE_PKG=openjdk-8-jre-headless
 ```
 
-Inherit the minimal setting used in the previous build stage:
+Inherit the arguments in the previous build stage:
 
 ```
 ARG MINIMAL
+ARG S6_OVERLAY_VERSION
 ```
+
 ### COPY Artifacts from the First Stage
 
 The `COPY` command adds files into the image as a new layer. The `--from=builder `<source-location>` `<container-location> option copies build artifacts from the first builder stage of the Dockerfile without the tools or files required to build them:
 
 ```
 COPY --from=builder /opt/vertica /opt/vertica  
-COPY --from=builder /home/dbadmin /home/dbadmin  
+COPY --from=builder --chown=$DBADMIN_UID:$DBADMIN_GID /home/dbadmin /home/dbadmin  
 COPY --from=builder /root/.ssh /root/.ssh  
 COPY --from=builder /var/spool/cron /var/spool/cron  
-COPY --from=builder /usr/local/bin/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+COPY --from=builder /etc/ssh/sshd_config.d/* /etc/ssh/sshd_config.d/
+COPY --from=builder /etc/ssh/ssh_config.d/* /etc/ssh/ssh_config.d/
 ```
 
 ## Setting Environment Variables
@@ -335,16 +322,13 @@ COPY --from=builder /usr/local/bin/docker-entrypoint.sh /usr/local/bin/docker
 Values set with the `ENV` instruction set environment variables available in the running container:
 
 ```
-ENV LANG en_US.UTF-8  
-ENV TZ UTC  
+ENV PATH "$PATH:/opt/vertica/bin:/opt/vertica/sbin"
 ENV DEBIAN_FRONTEND noninteractive
 ```
 
 In the previous example:
 
-- **ENV LANG** sets the character set to US English.
-- **ENV TZ** sets the time zone. The default time zone is UTC (Coordinated Universal Time, previously called Greenwich Mean Time   (GMT)).
-- **ENV PATH** sets the \$PATH in the container to include the Vertica binaries and system binaries.
+- **PATH** sets the \$PATH in the container to include the Vertica binaries and system binaries.
 - **DEBIAN_FRONTEND** set to `noninteractive` ensures that there is zero interaction while installing or upgrading the system with `apt`.
 
 ## Install Daemon Scripts
@@ -353,6 +337,22 @@ Because the container does not run systemd by default, we provide functions to e
 
 ```
 ADD ./packages/init.d.functions /etc/rc.d/init.d/functions
+```
+
+## Install init program
+
+The init program that we use in the container is called [s6](https://github.com/just-containers/s6-overlay). It is like systemd, but is designed for containers. It behaves like a true init program (PID 1): reaping zombie processes, passing signals down to child process, restart long-running services. Both cron and sshd are setup as long-running services. If any of those two services stop running, s6 will restart them.
+
+The following commands will copy over scripts and binaries needed to run s6:
+
+```
+ADD https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-noarch.tar.xz /tmp
+ADD https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-x86_64.tar.xz /tmp
+```
+
+The following command will copy our custom config for s6 so that sshd and cron are created as long-running services:
+```
+COPY s6-rc.d/ /etc/s6-overlay/s6-rc.d/
 ```
 
 ## Installing Dependencies
@@ -380,14 +380,6 @@ RUN set -x \
 ```
 Be sure to indent all of the following commands 2 spaces further than the `RUN set -x \` command.
 
-### Address File Permissions Not Preserved in COPY Statement
-
-For Docker versions 19.03.0 and earlier, recursively apply file permissions that were not preserved from the first build stage:
-
-```
-  && chown -R $DBADMIN_UID:$DBADMIN_GID /home/dbadmin \
-```
-
 ### Update the Packages
 
 Update the package cache so that you can install packages:
@@ -397,7 +389,7 @@ Update the package cache so that you can install packages:
 ```
 ### Vertica and Admintools Required Packages
 
-Vertica and [Admintools](https://www.vertica.com/docs/latest/HTML/Content/Authoring/AdministratorsGuide/AdminTools/AdministrationToolsReference.htm) require the following packages to function properly:
+Vertica and [Admintools](https://www.vertica.com/docs/latest/HTML/Content/Authoring/AdministratorsGuide/AdminTools/AdministrationToolsReference.htm) require the following packages to function properly. There are also some additional packages included to make it easier when running `kubectl exec` for the container.
 
 ```
   && apt-get install -y --no-install-recommends \  
@@ -407,6 +399,7 @@ Vertica and [Admintools](https://www.vertica.com/docs/latest/HTML/Content/Author
   gdb \  
   iproute2 \  
   krb5-user \  
+  less \
   libkeyutils1\  
   libz-dev \  
   locales \  
@@ -418,6 +411,7 @@ Vertica and [Admintools](https://www.vertica.com/docs/latest/HTML/Content/Author
   procps \  
   sysstat \  
   sudo \   
+  vim-tiny \
 ```
 ### Install Java
 
@@ -487,25 +481,41 @@ We set the `JAVA_HOME` environment variable if we included Java in this image. T
 This step allows you to call Python from anywhere in the system. This is only required to allow us to run the UDx samples, as some samples use a Python script to generate data for ingestion:
 
 ```
-  && update-alternatives --install /usr/bin/python python /opt/vertica/oss/python3/bin/python3 1
+  && update-alternatives --install /usr/bin/python python /opt/vertica/oss/python3/bin/python3 1 \
+```
+
+### Make cron a setuid program
+
+This step changes cron so that it's setuid. This is done so that s6 doesn't t have to run `sudo cron ...` to start it.
+
+```
+  && chmod u+s /usr/sbin/cron \
+```
+
+### Unpack s6
+
+We copied s6 tar files in an earlier step. This will extract them into the root of the file system.
+
+```
+  && tar -C / -Jxpf /tmp/s6-overlay-x86_64.tar.xz \
+  && tar -C / -Jxpf /tmp/s6-overlay-noarch.tar.xz
 ```
 
 ## The Entrypoint Script
 
-The entrypoint script is what executes to create a container from your
-image:
+The entrypoint script is what executes to create a container from your image. We call the s6 init program and let it supervise the start of other processes.
 
 ```
-ENTRYPOINT ["/opt/vertica/bin/docker-entrypoint.sh"]
+ENTRYPOINT ["/init"]
 ```
 
 ## Exposing Ports
 
-Expose port 5433 for Vertica, and 5444 for the Vertica agent:
+Expose port 5433 for Vertica, and 8443 for Vertica's HTTP server:
 
 ```
 EXPOSE 5433  
-EXPOSE 5444
+EXPOSE 8443
 ```
 
 ## Configuring Image Access
