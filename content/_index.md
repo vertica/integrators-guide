@@ -4,95 +4,87 @@ linkTitle: "Vertica Integrator's Guide"
 weight: 10
 ---
 
-## Server Installation and Configuration
+A community site for users that integrate with Vertica. Share tips and strategies about provisioning, monitoring, management, storage, clients, loaders, and other tools.
 
-The following sections detail the minimum requirements to install Vertica. If you installed Vertica with the server package RPM or the [vertica_install](https://www.vertica.com/docs/latest/HTML/Content/Authoring/InstallationGuide/InstallingVertica/RunTheInstallScript.htm)
-installation script, these files and packages are installed automatically.
-
-Before you begin, review the following links in the [Vertica documentation](https://www.vertica.com/docs/latest/HTML/Content/Home.htm):
-- [Supported Operating Systems and Operating System Versions](https://www.vertica.com/docs/latest/HTML/Content/Authoring/SupportedPlatforms/MCandServer.htm)
-- [Vertica Licenses](https://www.vertica.com/docs/latest/HTML/Content/Authoring/AdministratorsGuide/Licensing/ManagingYourLicenseKey.htm)
+### Server installation and configuration
 
 <section class="landing-row">
     <a href="/server-installation/startup-files-min-reqs" class="landing-tile">
         <div class="tile-content">
             <h3>Startup files and minimum requirements</h3>
-            <p></p>
+            <p>Files and packages installed with the server package RPM or the vertica_install script.</p>
         </div>
     </a>
     <a href="/server-installation/admintools-agent" class="landing-tile">
         <div class="tile-content">
             <h3>Admintools, agent, and daemon files</h3>
-            <p></p>
+            <p>Requirements for our Python tool that can provision and manage your database.</p>
         </div>
     </a>
     <a href="/server-installation/vertica-extensions" class="landing-tile">
         <div class="tile-content">
             <h3>Vertica program extensions</h3>
-            <p></p>
+            <p>Lists of utilities, language driver files, and other prerequisites to extend Vertica.</p>
         </div>
     </a>
     <a href="/cli-args/" class="landing-tile">
         <div class="tile-content">
             <h3>Command line arguments</h3>
-            <p></p>
+            <p>Cheat sheet for Vertica files that accept command line arguments.</p>
         </div>
     </a>
 </section>
 
-## Provisioning: Database Cluster Initialization, Formation, Startup, Shutdown, and Alteration
+### Containers and Kubernetes
 
-- [Admintools Commands](https://www.vertica.com/docs/latest/HTML/Content/Authoring/AdministratorsGuide/AdminTools/WritingAdministrationToolsScripts.htm)
-
-## Containerized Vertica
 
 <section class="landing-row">
   <a href="/containers/creating-image" class="landing-tile">
       <div class="tile-content">
           <h3>Creating a Vertica image</h3>
-          <p></p>
+          <p>Customize a Vertica image with this in-depth tutorial about the minimal Vertica server image that runs in on Kubernetes.</p>
       </div>
   </a>
   <a href="/containers/k8s-dev-env" class="landing-tile">
       <div class="tile-content">
           <h3>Kubernetes development environment</h3>
-          <p></p>
+          <p>Tips for developing applications with Vertica on Kubernetes.</p>
       </div>
   </a>
-</section>  
+</section>
 
-## Data Protocols and Formats
+### Data protocols and formats
+
 
 <section class="landing-row">
   <a href="/data-protocols-formats/reflection" class="landing-tile">
       <div class="tile-content">
           <h3>Reflection format</h3>
-          <p></p>
+          <p>Save Vertica data items in ASCII/UTF-8 text format.</p>
       </div>
   </a>
   <a href="/data-protocols-formats/frontend-backend" class="landing-tile">
       <div class="tile-content">
-          <h3>Front end and Backend protocol</h3>
-          <p></p>
+          <h3>Frontend and Backend protocols</h3>
+          <p>Details about the message-based protocol that Vertica uses for communication between clients and servers.</p>
       </div>
   </a>
   <a href="/data-protocols-formats/hashing-funcs" class="landing-tile">
       <div class="tile-content">
           <h3>Hashing functions</h3>
-          <p></p>
+          <p>Summary of different kinds of hashing that Vertica uses.</p>
       </div>
   </a>
 </section>
 
-## Useful Links
+### Links
 
-- [Official Vertica site](https://www.vertica.com)
-- [Vertica
-  Documentation](https://www.vertica.com/docs/latest/HTML/Content/Home.htm)
-- [Vertica Main Forum](https://forum.vertica.com)
+- [Vertica](https://www.vertica.com)
+- [Vertica Documentation](https://www.vertica.com/docs/latest/HTML/Content/Home.htm)
+- [Vertica Forum](https://forum.vertica.com)
 - [Vertica on GitHub](https://github.com/vertica)
 - [Integrator's Guide Discussion Forum](https://www.verticaintegratorsguide.org/phpbb)
 
-## Contributing
+### Contribute
 
-Link to or copy README contributing information here.
+Contribute to the [Vertica Integrator's Guide on GitHub](https://github.com/vertica/integrators-guide).

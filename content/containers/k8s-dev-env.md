@@ -69,7 +69,8 @@ subclusters:
 ## Getting Started
 
 The [Vertica Administration Tools](https://www.vertica.com/docs/10.1.x/HTML/Content/Authoring/AdministratorsGuide/AdminTools/AdministrationToolsReference.htm) is helpful when interacting with your cluster. The [admintool commands](https://www.vertica.com/docs/10.1.x/HTML/Content/Authoring/AdministratorsGuide/AdminTools/WritingAdministrationToolsScripts.htm) provide command line tools to create a database, add and remove Vertica cluster nodes, and [re_ip your cluster](https://www.vertica.com/docs/10.1.x/HTML/Content/Authoring/AdministratorsGuide/ManageNodes/ReMapIPs/RestartNodeNewHostIPs.htm) automatically whether the cluster is UP or DOWN. Using the [kubectl command line tool](https://kubernetes.io/docs/referenc/kubectl/overview/) and [Helm commands](https://helm.sh/docs/) is required knowledge to interact with your cluster, but getting started is esy. Below are a few common commands
-### Pod Informatio
+
+### Pod Information
 Use the -o wide option on the `kubectl get pods` and othe `get` kubectl commands to get a detailed view of the pods, including their IP addresses
 
 ```bash
