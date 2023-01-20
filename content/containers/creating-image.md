@@ -251,7 +251,7 @@ The following commands copy the static SSH key to use for root and ensures all k
 ```
 ### Ensure proper ownership and permissions
 
-Ensure everything under /home/dbadmin has the correct ownership. And the ssh config files are correct permissions.
+Ensure everything under /home/dbadmin has the correct ownership. And the ssh config files are correct permissions:
 
 ```
   && chown -R dbadmin:verticadba /home/dbadmin/ \
