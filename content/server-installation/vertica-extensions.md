@@ -1,7 +1,7 @@
 ---
 title: "Vertica program extensions"
 linkTitle: "Vertica program extensions"
-weight: 30
+weight: 3
 ---
 
 ## Validation Utilities

@@ -1,7 +1,7 @@
 ---
 title: "Admintools, agent, and daemon files"
 linkTitle: "Admintools, agent, and daemon files"
-weight: 20
+weight: 2
 ---
 
 ## Adding the Python Library

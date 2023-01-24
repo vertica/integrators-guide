@@ -1,7 +1,7 @@
 ---
 title: "Frontend and backend protocols"
 linkTitle: "Frontend and backend protocols"
-weight: 20
+weight: 2
 ---
 
 Vertica uses a message-based protocol for communication between frontends and backends (clients and servers). The protocol is supported over TCP/IP sockets. This document describes version 3.10 of the protocol.
