@@ -14,29 +14,7 @@ The Vertica Integrator's Guide uses [Hugo](https://gohugo.io/) with a [Docsy the
 
 ## Prerequisites
 
-This repository uses [Hugo-supported Markdown](https://www.markdownguide.org/tools/hugo/), so you can create or edit documentation in your favorite text editor.
-
-At minimum, you must [install git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git), with your [username](https://docs.github.com/en/get-started/getting-started-with-git/setting-your-username-in-git) and [email address](https://docs.github.com/en/account-and-profile/setting-up-and-managing-your-personal-account-on-github/managing-email-preferences/setting-your-commit-email-address) configured: 
-
-```shell
-$ git config --global user.name "Jane Smith"
-$ git config --global user.email "email@example.com"
-```
-
-### Optional authoring environment setup
-If you want to set up the complete authoring environment on your local machine, install the following depenencies:
-- [Go](https://go.dev/doc/install) (version 1.18+)
-- [Hugo extended package](https://gohugo.io/installation/)
-- [node version manager (nvm)](https://github.com/nvm-sh/nvm)
-- [Node.js](https://nodejs.org/en/download/)
-- [node pacakage manager (npm)](https://www.npmjs.com/)
-- [PostCSS](https://postcss.org/):
-  
-  ```shell
-  $ npm install -D autoprefixer
-  $ npm install -D postcss-cli
-  $ npm install -D postcss
-  ```
+See the installation section in the README.
 
 ### 1. Fork the project
 
