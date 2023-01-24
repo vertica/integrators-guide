@@ -1,7 +1,7 @@
 ---
 title: "Command line arguments"
 linkTitle: "Command line arguments"
-weight: 40
+weight: 4
 ---
 
 The following files accept command line arguments:

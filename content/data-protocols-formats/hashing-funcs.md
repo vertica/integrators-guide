@@ -1,7 +1,7 @@
 ---
 title: "Hashing functions"
 linkTitle: "Hashing functions"
-weight: 30
+weight: 3
 ---
 
 ## Uses of Hashing

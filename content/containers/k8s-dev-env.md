@@ -1,7 +1,7 @@
 ---
 title: "Vertica on Kubernetes development environment"
 linkTitle: "Vertica on Kubernetes development environment"
-weight: 20
+weight: 2
 ---
 
 ## Vertica and Kubernetes
