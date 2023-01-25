@@ -1,0 +1,32 @@
+name: build test
+
+on: [push, pull_request]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v2
+
+      - name: Hugo setup
+        uses: peaceiris/actions-hugo@v2
+        with:
+          hugo-version: "0.99.1"
+          extended: true
+
+      - name: Node setup 
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16
+          cache: npm
+          cache-dependency-path: "**/package-lock.json"
+
+      - name: Clean public directory
+        run: rm -rf public
+
+      - name: Install npm 
+        run: npm ci
+
+      - name: Build Hugo 
+        run: hugo --minify
