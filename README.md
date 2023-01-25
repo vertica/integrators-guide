@@ -1,7 +1,7 @@
 # Todo
 - Images
 - ~~Landing page redesign~~
-- README
+- ~~README~~
 - ~~CONTRIBUTING.md~~
 - GH Actions with build test
 - Host with GH pages
