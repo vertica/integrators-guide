@@ -1,11 +1,3 @@
-# Todo
-- Images
-- ~~Landing page redesign~~
-- README
-- ~~CONTRIBUTING.md~~
-- GH Actions with build test
-- Host with GH pages
-
 # Integrator's Guide
 
 A community repo for users that integrate with Vertica with provisioning, monitoring, management, storage, clients, loaders, and other tools.
@@ -13,7 +5,7 @@ A community repo for users that integrate with Vertica with provisioning, monito
 
 ## Setup
 
-Before you can contribute, you must configure your git [username](https://docs.github.com/en/get-started/getting-started-with-git/setting-your-username-in-git) and [email address](https://docs.github.com/en/account-and-profile/setting-up-and-managing-your-personal-account-on-github/managing-email-preferences/setting-your-commit-email-address): 
+Before you can contribute changes, you must configure your git [username](https://docs.github.com/en/get-started/getting-started-with-git/setting-your-username-in-git) and [email address](https://docs.github.com/en/account-and-profile/setting-up-and-managing-your-personal-account-on-github/managing-email-preferences/setting-your-commit-email-address): 
 ```shell
 $ git config --global user.name "Jane Smith"
 $ git config --global user.email "email@example.com"
@@ -51,6 +43,7 @@ The Vertica team is always open to suggestions--please feel free to share your i
 3. Implement your fix or feature. Documentation files are located in the `/content` directory:
    - For [edits or additions](#edits) to existing documentation, locate the file and make the changes.
    - For guidelines about adding a new documentation, see [New Features](#new-features).
+   - See Images for details about adding image files to this project.
    See [Commits](#commits) for guidance on incrementally saving your work.
 4. Push your work to the remote repository on GitHub:
    ```shell
@@ -96,6 +89,14 @@ The `weight` value determines the order of the table of contents (TOC). For exam
 ### Edits
 
 If you find a bug or typo, submit an issue or correct it on your branch. If you opened an issue and then later resolved it on your own, comment on the issue and then close the issue.
+
+### Images 
+
+Add images with the [Hugo-supported Markdown syntax](https://www.markdownguide.org/basic-syntax/#images-1).  If you must control the `width` of your image, you can use [HTML image](https://developer.mozilla.org/en-US/docs/Learn/HTML/Multimedia_and_embedding/Images_in_HTML) or [figure](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/figure) syntax. All images must include alternative text.
+
+> Prefer the Markdown syntax.
+
+Image source are served from the `/static/images/` directory. The `/images` directory structure should mimic the `/content` directory structure. For example, if you add documentation to the `/content/containers/` section, you must save your images to `/static/images/containers/`. If your new documentation includes images, create the new directory structure. For example, `/static/images/new-feature/new-image.png`.
 
 ## Commits
 
