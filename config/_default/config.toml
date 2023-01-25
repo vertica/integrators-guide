@@ -29,6 +29,9 @@ enableGitInfo = true
 # Comment out to enable taxonomies in Docsy
 # disableKinds = ["taxonomy", "taxonomyTerm"]
 
+# Lunr local search
+# offlineSearch = true
+
 
 #################### Different from hugo branch ####################
 
@@ -144,20 +147,30 @@ anchor = "smart"
   ui.ul_show = 4
 
 
-#[[menu.main]]
-#    name = "Academy"
-#    weight = 10
-#    url = "https://academy.vertica.com/"
+[[menu.main]]
+    name = "Documentation"
+    weight = 10
+    url = "https://www.vertica.com/docs/latest/HTML/Content/Home.htm"
 
-#[[menu.main]]
-#    name = "Forum"
-#    weight = 20
-#    url = "https://forum.vertica.com/"
+[[menu.main]]
+    name = "Knowledge Base"
+    weight = 20
+    url = "https://www.vertica.com/knowledgebase/"
 
-#[[menu.main]]
-#    name = "Support"
-#    weight = 30
-#    url = "https://www.microfocus.com/en-us/support/Vertica%20Analytics%20Platform"
+[[menu.main]]
+    name = "Academy"
+    weight = 30
+    url = "https://academy.vertica.com/"
+
+[[menu.main]]
+    name = "Forum"
+    weight = 40
+    url = "https://forum.vertica.com/"
+
+[[menu.main]]
+    name = "Support"
+    weight = 50
+    url = "https://www.microfocus.com/en-us/support/Vertica%20Analytics%20Platform"
 
 
 #[module]
