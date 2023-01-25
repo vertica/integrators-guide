@@ -20,13 +20,14 @@ jobs:
         with:
           node-version: 16
           cache: npm
-          cache-dependency-path: "**/package-lock.json"
+      - run: npm ci
+      - run: npm test 
+      - run: npm install -D autoprefixer
+      - run: npm install -D postcss-cli
+      - run: npm install -D postcss
 
       - name: Clean public directory
         run: rm -rf public
-
-      - name: Install npm 
-        run: npm ci
 
       - name: Build Hugo 
         run: hugo --minify
