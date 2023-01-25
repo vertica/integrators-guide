@@ -22,6 +22,11 @@ This repository uses [Hugo](https://gohugo.io/) with a [Docsy](https://www.docsy
 - [Hugo extended package](https://gohugo.io/installation/) (version 0.99.1)
 - [Docsy](https://www.docsy.dev/docs/get-started/#installation-options)
 
+After you set up your local environment, the following command serves the documentation on `localhost:1313`:
+```shell 
+$ hugo serve
+```
+
 ## Contribute 
 
 The Vertica team is always open to suggestions--please feel free to share your ideas about how to improve the Integrator's Guide. To provide suggestions, open an issue with details describing any features that you would like added or changed.
