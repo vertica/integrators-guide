@@ -19,13 +19,13 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 16
-          # cache: npm
-          # cache-dependency-path: 'package-lock.json'
+          cache: "npm"
+          cache-dependency-path: "**/package-lock.json"
       - run: npm ci
       - run: npm test 
-      - run: npm install -D autoprefixer
-      - run: npm install -D postcss-cli
-      - run: npm install -D postcss
+      # - run: npm install -D autoprefixer
+      # - run: npm install -D postcss-cli
+      # - run: npm install -D postcss
 
       - name: Clean public directory
         run: rm -rf public
