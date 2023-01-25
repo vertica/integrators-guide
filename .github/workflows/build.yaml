@@ -20,7 +20,7 @@ jobs:
         with:
           node-version: 16
           cache: npm
-          cache-dependency-path: '/home/runner/work/integrators-guide/integrators-guide/package-lock.json'
+          cache-dependency-path: 'package-lock.json'
       - run: npm ci
       - run: npm test 
       - run: npm install -D autoprefixer
