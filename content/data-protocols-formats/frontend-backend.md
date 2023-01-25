@@ -474,7 +474,8 @@ The possible response messages from the backend are:
   : Processing of the query string is complete. A separate message is sent to indicate this because the query string might contain multiple SQL commands. ([CommandComplete](#commandcomplete-c) marks the end of processing **one** SQL command, not the whole string.) ReadyForQuery will always be sent, whether processing terminates successfully or with an error.
 
 The response to a SELECT query (or other queries that return row sets, such as EXPLAIN or SHOW) normally consists of [RowDescription](#rowdescription-t), zero or more [DataRow](#datarow-d) messages, and then [CommandComplete](#commandcomplete-c). COPY command invokes special protocol as described in Section [COPY Operations](#copy-operations). Other query types normally produce only a [CommandComplete](#commandcomplete-c) message.
-#emptyqueryresponse-iemicolons), there might be several such response sequences before the backend finishes processing the query string. ReadyForQuery is issued when the entire string has been processed and the backend is ready to accept a new query string.
+
+Since a query string could contain several queries (separated by semicolons), there might be several such response sequences before the backend finishes processing the query string. ReadyForQuery is issued when the entire string has been processed and the backend is ready to accept a new query string.
 
 If a completely empty (no contents other than whitespace) query string is received, the response is [EmptyQueryResponse](#emptyqueryresponse-i) followed by [ReadyForQuery](#readyforquery-z).
 
