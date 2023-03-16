@@ -153,8 +153,8 @@ dd {
       // Revisit this fix. Cannot find correct nav style to override.
       svg {
           display: inline-block;
-          margin: 0 0 0 -6.25rem; // override margin: 0 10px;
-          height: 40px; // override 30px
+          margin: 0 0 0 1rem; // override margin: 0 10px;
+          height: 60px; // override 30px
       }
   }
 }
@@ -169,13 +169,19 @@ dd {
 
 // Caret appearance overrides. Uses a '>' and lightens color
 // Docsy uses font awesome icons https://fontawesome.com/icons/angle-right?s=solid
-nav.foldable-nav {
 
-  .ul-1 .with-child > label:before {
-      font-family: "Font Awesome 5 Free"; font-weight: 900; content: "\f105"; // override '\f0da'
-      color: $gray-700; // override $gray-900
-  }
-}
+// nav.foldable-nav {
+
+//   .ul-1 .with-child > label:before {
+//       font-family: "Font Awesome 5 Free";
+//       font-weight: 900; 
+//       content: "\f105"; // override '\f0da'
+//       color: $gray-700; // override $gray-900
+//   }
+
+// }
+
+
 
 // Caret behavior overrides
 @media (hover: hover) and (pointer: fine) {
@@ -213,6 +219,19 @@ nav.foldable-nav {
           color: $primary; // override $blue
       }
   }
+}
+
+/* add padding to TOC top to prevent clipping of first item by banner */
+.td-sidebar-nav > .td-sidebar-nav__section {
+  padding-top: 2rem;
+}
+
+.td-sidebar-toc {
+  padding-top: 2rem;
+}
+
+.td-main main {
+  padding-top: 6.5rem;
 }
 
 
