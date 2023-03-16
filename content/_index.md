@@ -1,7 +1,7 @@
 ---
 title: "Vertica Integrator's Guide"
 linkTitle: "Vertica Integrator's Guide"
-weight: 1
+weight: 10
 ---
 
 A community site for users that integrate with Vertica. Share tips and strategies about provisioning, monitoring, management, storage, clients, loaders, and other tools.

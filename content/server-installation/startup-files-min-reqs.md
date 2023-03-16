@@ -1,7 +1,7 @@
 ---
 title: "Startup files and minimum requirements"
 linkTitle: "Startup files and minimum requirements"
-weight: 1
+weight: 10
 ---
 
 The Vertica server package RPM and the [vertica_install](https://www.vertica.com/docs/latest/HTML/Content/Authoring/InstallationGuide/InstallingVertica/RunTheInstallScript.htm) installation script include files that are not required to run a Vertica
