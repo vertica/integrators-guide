@@ -77,14 +77,6 @@ A community site for users that integrate with Vertica. Share tips and strategie
   </a>
 </section>
 
-### Links
-
-- [Vertica](https://www.vertica.com)
-- [Vertica Documentation](https://www.vertica.com/docs/latest/HTML/Content/Home.htm)
-- [Vertica Forum](https://forum.vertica.com)
-- [Vertica on GitHub](https://github.com/vertica)
-- [Integrator's Guide Discussion Forum](https://www.verticaintegratorsguide.org/phpbb)
-
 ### Contribute
 
 Contribute to the [Vertica Integrator's Guide on GitHub](https://github.com/vertica/integrators-guide).
