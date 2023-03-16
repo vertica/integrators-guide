@@ -35,7 +35,7 @@ jobs:
 
       # uncomment when cname is complete
       # - name: Create cname file
-      #   run: echo 'freshswift.net' > public/CNAME
+      #   run: echo 'www.example.com' > public/CNAME
 
       # push to gh-pages branch
       - name: Deploy 
