@@ -28,11 +28,11 @@ Vertica recommends the following open-source security scanners to protect agains
 
 For additional container file guidance, refer to [Best practices for writing Dockerfiles](https://docs.docker.com/develop/develop-images/dockerfile_best-practices/).
 
-# Multistage Build
+## Multistage Build
 
 Vertica uses a multistage build to reduce the size of the final Docker image. Each `RUN` command adds a new layer to the Docker image. Each layer performs work using the the previous layer, resulting in leftover build artifacts that increase the image size. Using a multistage build takes the final result of the first stage and use it as a single layer in the second stage, removing any unnecessary artifacts created by intermediary layers during any previous stages
 
-# Setting Global ARG Variables
+## Setting Global ARG Variables
 
 Before the build stages begin, we must define ARG variables that are scoped globally across the two stages. To make an ARG variable available in a particular stage, you must define it after the FROM tag.
 
@@ -60,7 +60,7 @@ We use [s6](https://github.com/just-containers/s6-overlay) as the init program. 
 ARG S6_OVERLAY_VERSION=3.1.2.1
 ```
 
-# First Stage
+## First Stage
 
 The first stage is named **builder**. The **builder** stage generates the /opt/vertica directory structure by downloading the required packages and dependencies, then running the Vertica installer. The `FROM` command sets the base image for the **builder** and initiates the build of that stage. The `BUILDER_OS_VERSION` was previously selected as the image version to use for this stage. The following `FROM` command assigns the name **builder** to the first stage in the multistage build:
 
@@ -68,7 +68,7 @@ The first stage is named **builder**. The **builder** stage generates the /opt/v
 FROM centos:centos${BUILDER_OS_VERSION} as builder
 ```
 
-## Setting ARG Variables
+### Setting ARG Variables
 
 Container files use the `ARG` instruction to define build process variables. **VERTICA_RPM** stores the name of the Vertica RPM file. You must store the RPM in the `/packages` directory to build a container image. If you do not have a Vertica license, use the free trial [Community Edition](https://www.vertica.com/register/) RPM.
 
@@ -89,7 +89,7 @@ ARG DBADMIN_GID=5000
 ARG DBADMIN_UID=5000
 ```
 
-## Adding Files
+### Adding Files
 
 The `COPY` instruction copies files from the host filesystem into the container filesystem.
 
@@ -116,13 +116,13 @@ COPY ./packages/10-vertica-sshd.conf /etc/ssh/sshd_config.d/10-vertica-sshd.conf
 COPY ./packages/10-vertica-ssh.conf /etc/ssh/ssh_config.d/10-vertica-ssh.conf
 ```
 
-## Installing Dependencies
+### Installing Dependencies
 
 This section incrementally builds a single `RUN` instruction. The `RUN` instruction executes Bash commands that persist in your container.
 
 Each `RUN` instruction adds a layer to the final image. To limit the number of `RUN` instructions, use the Bash **&&** operator to chain multiple `RUN` commands into a single command. To chain commands that span multiple lines into a single command, enter the backslash ( **\\** ) character at the end of the line.
 
-### Begin the RUN Instruction
+#### Begin the RUN Instruction
 
 Add `RUN set -x` to log each command to the console as it is executed:
 
@@ -132,23 +132,23 @@ RUN set -x \
 
 Indent the following commands 2 spaces further than the `RUN set -x \` command.
 
-### Update the Packages
+##### Update the Packages
 
 To begin, update all packages:
 
 ```
   && yum -q -y update \
 ```
-### Vertica and Admintools Required Packages
+#### Vertica and Admintools Required Packages
 
-Vertica and [Admintools](https://www.vertica.com/docs/latest/HTML/Content/Authoring/AdministratorsGuide/AdminTools/AdministrationToolsReference.htm) require the following packages to function properly:
+Vertica and [Admintools](https://www.vertica.com/docs/latest/HTML/Content/Authoring/AdministratorsGuide/AdminTools/AdministrationToolsReference.htm) r#equire the following packages to function properly:
 
 ```
   && yum install -y \  
      cronie \  
      dialog \  
      iproute \  
-     mcelog \  
+ #    mcelog \  
      openssh-server \  
      openssh-clients \  
      openssl \  
@@ -157,7 +157,7 @@ Vertica and [Admintools](https://www.vertica.com/docs/latest/HTML/Content/Author
      zlib-devel \
 ```
 
-### Configure the dbadmin Role and Group
+#### Configure the dbadmin Role and Group
 
 Create the required **verticadba** group and add the **dbadmin** user:
 
@@ -165,23 +165,23 @@ Create the required **verticadba** group and add the **dbadmin** user:
   && /usr/sbin/groupadd -r verticadba --gid ${DBADMIN_GID} \  
   && /usr/sbin/useradd -r -m -s /bin/bash -g verticadba --uid ${DBADMIN_UID} dbadmin \
 ```
-### Install the Locally-Sourced RPM
+#### Install the Locally-Sourced RPM
 
-Install the RPM from the `docker-vertica/packages` directory in the container `/tmp` directory:
+I#nstall the RPM from the `docker-vertica/packages` directory in the container `/tmp` directory:
 
 ```
   && yum localinstall -q -y /tmp/${VERTICA_RPM} \
 ```
-### Run install_vertica Script
+#### Run install_vertica Script
 
-To prepare the Vertica environment, run the [install_vertica script](https://www.vertica.com/docs/11.0.x/HTML/Content/Authoring/InstallationGuide/InstallingVertica/InstallVerticaScript.htm):
+To prepare the Vertica environment, run the [install_vertica script](https://www.vertica.com/docs/11.0.x/HTML/Content/Authoring/InstallationGuide/I#nstallingVertica/InstallVerticaScript.htm):
 
 ```
   && /opt/vertica/sbin/install_vertica \  
   --accept-eula \  
   --debug \  
   --dba-user-password-disabled \  
-  --failure-threshold NONE \  
+ # --failure-threshold NONE \  
   --license CE \  
   --hosts 127.0.0.1 \  
   --no-system-configuration \  
@@ -189,7 +189,7 @@ To prepare the Vertica environment, run the [install_vertica script](https://www
   -U \  
   --data-dir /home/dbadmin \
 ```
-### Add License Files
+#### Add License Files
 
 If you used the [Community Edition license](https://www.vertica.com/landing-page/start-your-free-trial-today/), create a directory to install the Community Edition license key:
 
@@ -197,7 +197,7 @@ If you used the [Community Edition license](https://www.vertica.com/landing-page
   && mkdir -p /home/dbadmin/licensing/ce \  
   && cp -r /opt/vertica/config/licensing/* /home/dbadmin/licensing/ce/ \
 ```
-Configure [logrotate](https://www.vertica.com/docs/11.0.x/HTML/Content/Authoring/AdministratorsGuide/Monitoring/Vertica/RotatingLogFiles.htm) to simplify log file administration:
+Configure [logrotate](https://www.vertica.com/docs/11.0.x/HTML/Content/Authoring/AdministratorsGuide/Monitoring/Vertica/RotatingLogFiles.htm) to simplify l#og file administration:
 
 ```
   && mkdir -p /home/dbadmin/logrotate \  
@@ -210,7 +210,7 @@ Provide the dbadmin user ownership of the Vertica files:
 ```
   && chown -R dbadmin:verticadba /opt/vertica \
 ```
-### Clean Up Install Files
+#### Clean Up Install Files
 
 Run the `cleanup.sh` script to reduce the size of the final image:
 
@@ -220,16 +220,16 @@ Run the `cleanup.sh` script to reduce the size of the final image:
   && sh /tmp/cleanup.sh
 ```
 
-## Prepare the static ssh keys
+### Prepare the static ssh keys
 
 We use static SSH key for the dbadmin id. This is required so that if the environment runs multiple versions of the image, then all nodes can communicate through SSH.
 ```
 COPY dbadmin/.ssh /home/dbadmin/.ssh  
 ```
 
-## Configure Container Network and Access Privileges
+### Configure Container Network and Access Privileges
 
-### Begin the RUN Instruction
+#### Begin the RUN Instruction
 
 Add `RUN set -x` to log each command to the console as it is executed:
 
@@ -237,7 +237,7 @@ Add `RUN set -x` to log each command to the console as it is executed:
 RUN set -x \
 ```
 
-### Copy SSH Keys
+#### Copy SSH Keys
 
 The following commands copy the static SSH key to use for root and ensures all keys have the proper permissions:
 
@@ -249,7 +249,7 @@ The following commands copy the static SSH key to use for root and ensures all k
   && mkdir -p /home/dbadmin/.ssh \  
   && chmod 600 /home/dbadmin/.ssh/* \
 ```
-### Ensure proper ownership and permissions
+#### Ensure proper ownership and permissions
 
 Ensure that everything under /home/dbadmin has the correct ownership and the ssh config files have the correct permissions:
 
@@ -258,7 +258,7 @@ Ensure that everything under /home/dbadmin has the correct ownership and the ssh
   && chmod go-w /etc/ssh/sshd_config.d/* /etc/ssh/ssh_config.d/*
 ```
 
-# Second Stage
+## Second Stage
 
 The second and final build stage:
 
@@ -317,7 +317,7 @@ COPY --from=builder /etc/ssh/sshd_config.d/* /etc/ssh/sshd_config.d/
 COPY --from=builder /etc/ssh/ssh_config.d/* /etc/ssh/ssh_config.d/
 ```
 
-## Setting Environment Variables
+### Setting Environment Variables
 
 Values set with the `ENV` instruction set environment variables available in the running container:
 
@@ -331,7 +331,7 @@ In the previous example:
 - **PATH** sets the \$PATH in the container to include the Vertica binaries and system binaries.
 - **DEBIAN_FRONTEND** set to `noninteractive` ensures that there is zero interaction while installing or upgrading the system with `apt`.
 
-## Install Daemon Scripts
+### Install Daemon Scripts
 
 Because the container does not run systemd by default, we provide functions to enable the `vertica_agent` script to function properly:
 
@@ -339,7 +339,7 @@ Because the container does not run systemd by default, we provide functions to e
 ADD ./packages/init.d.functions /etc/rc.d/init.d/functions
 ```
 
-## Install init program
+### Install init program
 
 The init program that we use in the container is called [s6](https://github.com/just-containers/s6-overlay). It is like systemd, but is designed for containers. It behaves like a true init program (PID 1): reaping zombie processes, passing signals down to child process, restart long-running services. Both cron and sshd are setup as long-running services. If any of those two services stop running, s6 will restart them.
 
@@ -355,7 +355,7 @@ The following command will copy our custom config for s6 so that sshd and cron a
 COPY s6-rc.d/ /etc/s6-overlay/s6-rc.d/
 ```
 
-## Installing Dependencies
+### Installing Dependencies
 
 This section incrementally builds a single `RUN` instruction. The `RUN` instruction executes Bash commands that persist in your container.
 
@@ -363,7 +363,7 @@ Each `RUN` instruction adds a layer to the final image. To limit the number of `
 
 Many of the following commands are similar to those added in the previous build stage.
 
-### Setup the SHELL
+#### Setup the SHELL
 
 Setup the shell so that commands fail if a command flowing through a `|` fails.
 
@@ -371,7 +371,7 @@ Setup the shell so that commands fail if a command flowing through a `|` fails.
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 ```
 
-### Begin the RUN Instruction
+#### Begin the RUN Instruction
 
 Add `RUN set -x` to log each command to the console as it is executed:
 
@@ -380,14 +380,14 @@ RUN set -x \
 ```
 Be sure to indent all of the following commands 2 spaces further than the `RUN set -x \` command.
 
-### Update the Packages
+#### Update the Packages
 
 Update the package cache so that you can install packages:
 
 ```
   && apt-get -y update \
 ```
-### Vertica and Admintools Required Packages
+#### Vertica and Admintools Required Packages
 
 Vertica and [Admintools](https://www.vertica.com/docs/latest/HTML/Content/Authoring/AdministratorsGuide/AdminTools/AdministrationToolsReference.htm) require the following packages to function properly. There are also some additional packages included to make it easier when running `kubectl exec` for the container.
 
@@ -413,7 +413,7 @@ Vertica and [Admintools](https://www.vertica.com/docs/latest/HTML/Content/Author
   sudo \   
   vim-tiny \
 ```
-### Install Java
+#### Install Java
 
 Add the following only if you are building a minimal image:
 
@@ -423,7 +423,7 @@ Add the following only if you are building a minimal image:
   fi \
 ```
 
-### Cleanup package manager
+#### Cleanup package manager
 
 Remove any cached data brought in from the package manager:
 
@@ -431,14 +431,14 @@ Remove any cached data brought in from the package manager:
   && rm -rf /var/lib/apt/lists/* \  
 ```
 
-### Setup the locale
+#### Setup the locale
 
 Make the `en_US.UTF-8` locale so that Vertica will use utf-8 by default:
 
 ```
   && localedef -i en_US -c -f UTF-8 -A /usr/share/locale/locale.alias en_US.UTF-8 \
 ```
-### SSH Setup
+#### SSH Setup
 
 This ensures the ssh daemon can start:
 
@@ -447,7 +447,7 @@ This ensures the ssh daemon can start:
   && ssh-keygen -q -A \
 ```
 
-### Configure the dbadmin Role and Group
+#### Configure the dbadmin Role and Group
 
 Create the required **verticadba** group and add the **dbadmin** user:
 
@@ -455,19 +455,19 @@ Create the required **verticadba** group and add the **dbadmin** user:
   && /usr/sbin/groupadd -r verticadba --gid ${DBADMIN_GID} \  
   && /usr/sbin/useradd -r -m -s /bin/bash -g verticadba --uid ${DBADMIN_UID} dbadmin \
 ```
-### Allow Passwordless sudo Access for dbadmin
+#### Allow Passwordless sudo Access for dbadmin
 
 ```
   && echo "dbadmin ALL=(ALL) NOPASSWD: ALL" | tee -a /etc/sudoers \
 ```
 
-### Setup limits for dbadmin
+#### Setup limits for dbadmin
 
 ```
   && echo "dbadmin -       nofile  65536" >> /etc/security/limits.conf \
 ```
 
-### Setup Java
+#### Setup Java
 
 We set the `JAVA_HOME` environment variable if we included Java in this image. This is used by Vertica to know where to find the Java runtime:
 
@@ -476,7 +476,7 @@ We set the `JAVA_HOME` environment variable if we included Java in this image. T
     echo "JAVA_HOME=/usr" >> /etc/environment; \
   fi \
 ```
-### Set Python Path
+#### Set Python Path
 
 This step allows you to call Python from anywhere in the system. This is only required to allow us to run the UDx samples, as some samples use a Python script to generate data for ingestion:
 
@@ -484,7 +484,7 @@ This step allows you to call Python from anywhere in the system. This is only re
   && update-alternatives --install /usr/bin/python python /opt/vertica/oss/python3/bin/python3 1 \
 ```
 
-### Make cron a setuid program
+#### Make cron a setuid program
 
 This step changes cron so that it's setuid. This is done so that s6 doesn't t have to run `sudo cron ...` to start it.
 
@@ -492,7 +492,7 @@ This step changes cron so that it's setuid. This is done so that s6 doesn't t ha
   && chmod u+s /usr/sbin/cron \
 ```
 
-### Unpack s6
+#### Unpack s6
 
 We copied s6 tar files in an earlier step. This will extract them into the root of the file system.
 
