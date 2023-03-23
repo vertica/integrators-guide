@@ -49,10 +49,16 @@ ARG BUILDER_OS_VERSION="7.9.2009"
 ```
 Both versions that you select must correspond to a docker tag for the OS images.
 
-When the MINIMAL argument is set to YES, the Dockerfile builds a smaller image. The smaller image omits large packages like Tensorflow and the Java runtime, which is required only to run Java UDx's. This will result in over 300MB (uncompressed) of savings. By default, we build the full image.
+When the `MINIMAL` argument is set to `YES`, the Dockerfile builds a smaller image. The smaller image omits large packages like Tensorflow and the Java runtime, which is required only to run Java UDx's. This will result in over 300MB (uncompressed) of savings. By default, we build the full image.
 
 ```
 ARG MINIMAL=""
+```
+
+The `NO_KEYS` argument is optional. In some circumstances, you might want to manage the SSH keys that authenticate connections to the Vertica server container. When you set this argument to `YES`, the Dockerfile requires user-provided SSH keys:
+
+```
+ARG NO_KEYS=""
 ```
 
 We use [s6](https://github.com/just-containers/s6-overlay) as the init program. This argument allows you to choose the version of that program. This version refers to one of the GitHub releases on the s6 [GitHub repository](https://github.com/just-containers/s6-overlay).
@@ -76,10 +82,11 @@ Container files use the `ARG` instruction to define build process variables. **V
 ARG VERTICA_RPM="vertica-x86_64.RHEL6.latest.rpm"
 ```
 
-The MINIMAL argument is already globally defined--the following line makes the variable available in this stage:
+The `MINIMAL` and `NO_KEYS` arguments are already globally defined--the following lines makes them available in this stage:
 
 ```
 ARG MINIMAL
+ARG NO_KEYS
 ```
 
 The next two variables define the default UID and GID of the [dbadmin](https://www.vertica.com/docs/latest/HTML/Content/Authoring/AdministratorsGuide/DBUsersAndPrivileges/Roles/DBADMINRole.htm) user account in the container:
@@ -121,6 +128,14 @@ COPY ./packages/10-vertica-ssh.conf /etc/ssh/ssh_config.d/10-vertica-ssh.conf
 This section incrementally builds a single `RUN` instruction. The `RUN` instruction executes Bash commands that persist in your container.
 
 Each `RUN` instruction adds a layer to the final image. To limit the number of `RUN` instructions, use the Bash **&&** operator to chain multiple `RUN` commands into a single command. To chain commands that span multiple lines into a single command, enter the backslash ( **\\** ) character at the end of the line.
+
+#### Set up the shell 
+
+The following command ensures that the build fails if any of the subsequent `RUN` commands fail:
+
+```
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+```
 
 #### Begin the RUN Instruction
 
@@ -243,11 +258,11 @@ The following commands copy the static SSH key to use for root and ensures all k
 
 ```
   && mkdir -p /root/.ssh \  
-  && cp -r /home/dbadmin/.ssh /root \  
-  && chmod 700 /root/.ssh \  
-  && chmod 600 /root/.ssh/* \  
-  && mkdir -p /home/dbadmin/.ssh \  
-  && chmod 600 /home/dbadmin/.ssh/* \
+  && if [[ ${NO_KEYS^^} != "YES" ]] ; then \
+    cp -r /home/dbadmin/.ssh /root; \
+    chmod 700 /root/.ssh; \
+    chmod 600 /root/.ssh/*; \
+  fi \
 ```
 #### Ensure proper ownership and permissions
 
@@ -255,7 +270,10 @@ Ensure that everything under /home/dbadmin has the correct ownership and the ssh
 
 ```
   && chown -R dbadmin:verticadba /home/dbadmin/ \
-  && chmod go-w /etc/ssh/sshd_config.d/* /etc/ssh/ssh_config.d/*
+  && chmod go-w /etc/ssh/sshd_config.d/* /etc/ssh/ssh_config.d/* \
+  && if [[ ${NO_KEYS^^} == "YES" ]] ; then \
+    rm -rf /home/dbadmin/.ssh/*;  \
+  fi
 ```
 
 ## Second Stage
@@ -418,7 +436,7 @@ Vertica and [Admintools](https://www.vertica.com/docs/latest/HTML/Content/Author
 Add the following only if you are building a minimal image:
 
 ```
-  && if ($MINIMAL != "YES" && $MINIMAL != "yes")  ; then \
+  && if [[ ${MINIMAL^^} != "YES" ]] ; then \
     apt-get install -y --no-install-recommends $JRE_PKG; \
   fi \
 ```
@@ -494,11 +512,12 @@ This step changes cron so that it's setuid. This is done so that s6 doesn't t ha
 
 #### Unpack s6
 
-We copied s6 tar files in an earlier step. This will extract them into the root of the file system.
+We copied s6 tar files in an earlier step. This will extract them into the root of the file system and delete the old host SSH keys:
 
 ```
   && tar -C / -Jxpf /tmp/s6-overlay-x86_64.tar.xz \
-  && tar -C / -Jxpf /tmp/s6-overlay-noarch.tar.xz
+  && tar -C / -Jxpf /tmp/s6-overlay-noarch.tar.xz \
+  && rm -rf /etc/ssh/ssh_host* 
 ```
 
 ## The Entrypoint Script
