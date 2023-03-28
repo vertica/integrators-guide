@@ -55,7 +55,7 @@ When the MINIMAL argument is set to YES, the Dockerfile builds a smaller image. 
 ARG MINIMAL=""
 ```
 
-We use [s6](https://github.com/just-containers/s6-overlay) as the init program. This argument allows you to choose the version of that program. This version refers to one of the GitHub releases on the s6 [GitHub repository](https://github.com/just-containers/s6-overlay).
+We use [s6](https://github.com/just-containers/s6-overlay) as the init program. This argument allows you to choose the version of that program. This version refers to one of the GitHub releases on the [s6 GitHub repository](https://github.com/just-containers/s6-overlay).
 ```
 ARG S6_OVERLAY_VERSION=3.1.2.1
 ```
@@ -341,16 +341,16 @@ ADD ./packages/init.d.functions /etc/rc.d/init.d/functions
 
 ### Install init program
 
-The init program that we use in the container is called [s6](https://github.com/just-containers/s6-overlay). It is like systemd, but is designed for containers. It behaves like a true init program (PID 1): reaping zombie processes, passing signals down to child process, restart long-running services. Both cron and sshd are setup as long-running services. If any of those two services stop running, s6 will restart them.
+The init program that we use in the container is called [s6](https://github.com/just-containers/s6-overlay). It is like systemd, but is designed for containers. It behaves like a true init program (PID 1): reaping zombie processes, passing signals down to child process, and restarting long-running services. Both cron and sshd are setup as long-running services. If any of those two services stop running, s6 restarts them.
 
-The following commands will copy over scripts and binaries needed to run s6:
+The following commands copies over scripts and binaries needed to run s6:
 
 ```
 ADD https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-noarch.tar.xz /tmp
 ADD https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-x86_64.tar.xz /tmp
 ```
 
-The following command will copy our custom config for s6 so that sshd and cron are created as long-running services:
+The following command copies our custom config for s6 so that sshd and cron are created as long-running services:
 ```
 COPY s6-rc.d/ /etc/s6-overlay/s6-rc.d/
 ```
@@ -494,7 +494,7 @@ This step changes cron so that it's setuid. This is done so that s6 doesn't t ha
 
 #### Unpack s6
 
-We copied s6 tar files in an earlier step. This will extract them into the root of the file system.
+We copied s6 tar files in an earlier step. This extracts them into the root of the file system:
 
 ```
   && tar -C / -Jxpf /tmp/s6-overlay-x86_64.tar.xz \
@@ -503,7 +503,7 @@ We copied s6 tar files in an earlier step. This will extract them into the root 
 
 ## The Entrypoint Script
 
-The entrypoint script is what executes to create a container from your image. We call the s6 init program and let it supervise the start of other processes.
+The entrypoint script is what executes to create a container from your image. We call the s6 init program and let it supervise the start of other processes:
 
 ```
 ENTRYPOINT ["/init"]
