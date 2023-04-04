@@ -1,7 +1,7 @@
 # Uncomment this line to have Hugo warn us about fixmes in the source code.
 # showfixmes = true
 includes_dir = "_includes"
-copyright = "Micro Focus Vertica"
+copyright = "Open Text Corporation"
 privacy_policy = "https://policies.google.com/privacy"
 
 
