@@ -55,7 +55,6 @@ When the `MINIMAL` argument is set to `YES`, the Dockerfile builds a smaller ima
 ARG MINIMAL=""
 ```
 
-<<<<<<< HEAD
 The `NO_KEYS` argument is optional. In some circumstances, you might want to manage the SSH keys that authenticate connections to the Vertica server container. When you set this argument to `YES`, the Dockerfile requires user-provided SSH keys:
 
 ```
@@ -63,9 +62,6 @@ ARG NO_KEYS=""
 ```
 
 We use [s6](https://github.com/just-containers/s6-overlay) as the init program. This argument allows you to choose the version of that program. This version refers to one of the GitHub releases on the s6 [GitHub repository](https://github.com/just-containers/s6-overlay).
-=======
-We use [s6](https://github.com/just-containers/s6-overlay) as the init program. This argument allows you to choose the version of that program. This version refers to one of the GitHub releases on the [s6 GitHub repository](https://github.com/just-containers/s6-overlay).
->>>>>>> main
 ```
 ARG S6_OVERLAY_VERSION=3.1.2.1
 ```
@@ -516,11 +512,7 @@ This step changes cron so that it's setuid. This is done so that s6 doesn't t ha
 
 #### Unpack s6
 
-<<<<<<< HEAD
 We copied s6 tar files in an earlier step. This will extract them into the root of the file system and delete the old host SSH keys:
-=======
-We copied s6 tar files in an earlier step. This extracts them into the root of the file system:
->>>>>>> main
 
 ```
   && tar -C / -Jxpf /tmp/s6-overlay-x86_64.tar.xz \
