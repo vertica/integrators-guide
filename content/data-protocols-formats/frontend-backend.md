@@ -4,7 +4,7 @@ linkTitle: "Frontend and backend protocols"
 weight: 20
 ---
 
-Vertica uses a message-based protocol for communication between frontends and backends (clients and servers). The protocol is supported over TCP/IP sockets. This document describes version 3.10 of the protocol.
+Vertica uses a message-based protocol for communication between frontends and backends (clients and servers). The protocol is supported over TCP/IP sockets. This document describes version 3.14 of the protocol.
 
 For purposes of the protocol, the terms "backend" and "server" are interchangeable; likewise "frontend" and "client" are interchangeable. See [vertica-python](https://github.com/vertica/vertica-python) for a frontend implementation reference of the protocol.
 
@@ -271,6 +271,17 @@ The text representation of values is whatever strings are produced and accepted 
             <p>LONG VARBINARY</p>
          </td>
       </tr>
+      <tr>
+         <td>
+            <p>Complex types (ARRAY, MAP, ROW, SET)</p>
+         </td>
+         <td>
+            <p>/</p>
+         </td>
+         <td>
+            <p>Data content is the same as TEXT format.</p>
+         </td>
+      </tr>
    </tbody>
 </table>
 
@@ -318,7 +329,7 @@ The possible messages from the server in this phase are:
 : The frontend must now send a [Password](#password-p) message containing the password in clear-text form. If this is the correct password, the server responds with an [AuthenticationOk](#authenticationok-r), otherwise it responds with an [ErrorResponse](#errorresponse-e). 
 
 [AuthenticationGSS](#authenticationgss-r)
-: The frontend must now initiate a GSSAPI negotiation. The frontend will send a [Password](#password-p) message with the first part of the GSSAPI data stream in response to this. If further messages are needed, the server will respond with [AuthenticationGSSContinue](#authenticationgsscontinue-r).
+: The frontend must now initiate a GSSAPI negotiation. The frontend will send a [Password](#password-p) message with the first part of the GSSAPI data stream in response to this. If further messages are needed, the server will respond with [AuthenticationGSSContinue](#authenticationgsscontinue-r). See [GSS-API/Kerberos Authentication](#gss-api--kerberos-authentication).
 
 [AuthenticationGSSContinue](#authenticationgsscontinue-r)
 : This message contains the response data from the previous step of GSSAPI negotiation (AuthenticationGSS, or a previous AuthenticationGSSContinue). If the GSSAPI data in this message indicates more data is needed to complete the authentication, the frontend must send that data as another [Password](#password-p) message. If GSSAPI authentication is completed by this message, the server will next send [AuthenticationOk](#authenticationok-r) to indicate successful authentication or [ErrorResponse](#errorresponse-e) to indicate failure.
@@ -372,7 +383,9 @@ Here are the most basic steps taken to authenticate in a Kerberized environment:
 2. The KDC verifies the credentials and sends back an encrypted TGT and session key.
 3. The TGT is encrypted using the Ticket Granting Service (TGS) secret key.
 4. The client stores the TGT and when it expires the local session manager will request another TGT (this process is transparent to the user).
-kinit in Linux is a command often used for obtaining or caching/renewing a Kerberos ticket-granting ticket (TGT).
+
+
+`kinit` in Linux is a command often used for obtaining or caching/renewing a Kerberos ticket-granting ticket (TGT).
 
 
 When the client requests access to a server, this is the process:
@@ -868,7 +881,7 @@ This section describes the detailed format of each message. Each message is clas
                   <tr>
                      <td>user</td>
                      <td>
-                        <p>The database user name to connect as. This is required unless a value is supplied for oauth_access_token, in which case the user is optional. Otherwise it is required. There is no default.</p>
+                        <p>The database user name to connect as. This is required unless a value is supplied for oauth_access_token, in which case the user can be an empty string. Otherwise it is required. There is no default.</p>
                      </td>
                   </tr>
                   <tr>
@@ -955,11 +968,23 @@ This section describes the detailed format of each message. Each message is clas
                      </td>
                   </tr>
                   <tr>
+                     <td>auth_category</td>
                      <td>
-                        <p>request_complex_types</p>
+                        <p>A string indicating the type of authentication the client is prepared to do. Recognized values are "User", "Kerberos" and "OAuth". Specify only one type at a time.</p>
                      </td>
+                  </tr>
+                  <tr>
+                     <td>protocol_features</td>
                      <td>
-                        <p>(DRAFT) '0' is the default. If set to '1', server will return complex type metadata. Otherwise complex types will be treated as long varchar.</p>
+                        <p>A JSON string of features requested by the driver. Each feature will return a ParameterStatus message. Currently supports the following features:
+'request_complex_types' - false is the default. If set to true, server will return complex type metadata. Otherwise, complex types will be treated as long varchar. Example value: {"request_complex_types":true}</p>
+                     </td>
+                  </tr>
+                  <tr>
+                     <td>protocol_compat</td>
+                     <td>
+                        <p>A string representing the protocol that the driver is able to understand. Used in postgres compatibility. The server will try and determine the type of driver and which protocol to be used. If this parameter is provided, the server will defer to the value given instead of determining which protocol to use on its own. This may be used in conversion and extension of PG drivers to understand parts of the Vertica protocol.<br>
+Currently recognized values for protocol_compat are "PG" or "VER" for Postgres and Vertica respectively. If no parameter is passed, the server will attempt to determine the value based on other parameters provided.</p>
                      </td>
                   </tr>
                </tbody>
@@ -1443,13 +1468,23 @@ Support since Server v12.0SP3
 
 ## Summary of Changes since Protocol 3.0
 
+### Protocol 3.14
+*Support since Server v12.0SP4*
+
+### Protocol 3.13
+
+Changes include:
+- Postgres compatibility support. Format change in the [StartupRequest](#startuprequest) message. New 'protocol_compat' parameter allowing specification of protocol understood by the driver.
+
+*Support since Server v12.0SP3*
+
 ### Protocol 3.12
 
 Changes include:
 
-- (DRAFT) Extended Complex Type support. Format change in the
-[StartupRequest](#startuprequest)
-message. New request_complex_types parameter.
+- Extended Complex Type support. Format change in the [StartupRequest](#startuprequest) message. New 'protocol_features' parameter supporting 'request_complex_types'.
+- Fall-Through Authentication Filtering: Format change in the [StartupRequest](#startuprequest) message. New 'auth_category' parameter.
+- [OAuth 2.0 Authentication](#oauth2-authentication): add [AuthenticationOAuth](#authenticationoauth-r) message.
 
 *Support since Server v12.0SP2*
 
