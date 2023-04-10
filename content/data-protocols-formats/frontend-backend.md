@@ -387,7 +387,7 @@ When the client requests access to a server, this is the process:
 8. The server grants access and sends a [AuthenticationOk](#authenticationok-r); or sends a [ErrorResponse](#errorresponse-e) to indicate failure.
 
 
-![Example message flow of GSS authentication](/images/GSSAuth_Msg_flow.png)
+![Example message flow of GSS authentication](/images/data-protocols-formats/frontent-backend/GSSAuth_Msg_flow.png)
 
 #### OAuth2 authentication
 
@@ -403,7 +403,7 @@ A client application should first configure the IDP and get the following parame
 
 - token_url: API used by client to refresh the token. This URL is exposed by IDP and must be accessible from client.
 
-![Example message flow of OAuth authentication](/images/OAuth_Msg_flow.png)
+![Example message flow of OAuth authentication](/images/data-protocols-formats/frontent-backend/OAuth_Msg_flow.png)
 
 Then in the server, create an OAuth authentication record with above parameters, and grant it to the user.
 
@@ -415,7 +415,7 @@ The client application call the IDP token API to retrieve the following paramete
 
 
 <figure>                                                               
-  <img src="/images/OAuth_refresh_Msg_flow.png"                                   
+  <img src="/images/data-protocols-formats/frontent-backend/OAuth_refresh_Msg_flow.png"                                   
        title="Example message flow of OAuth access token refresh"
        width="350"
        alt="Example message flow of OAuth access token refresh" />             
@@ -439,7 +439,7 @@ If 'auth_category' parameter is not set, the server still check for the token in
 A simple query cycle is initiated by the frontend sending a [Query](#query-q) message to the backend. The message includes an SQL command (or commands) expressed as a text string. The backend then sends one or more response messages depending on the contents of the query command string, and finally a [ReadyForQuery](#readyforquery-z) response message. ReadyForQuery informs the frontend that it can safely send a new command.
 
 
-![Example message flow of simple query with data rows returned](/images/SimpleQuery_Msg_flow.png)
+![Example message flow of simple query with data rows returned](/images/data-protocols-formats/frontent-backend/SimpleQuery_Msg_flow.png)
 
 The possible response messages from the backend are:
 
@@ -487,7 +487,7 @@ Recommended practice is to code frontends in a state-machine style that will acc
 
 The extended query protocol breaks down the above-described simple query protocol into multiple steps. The overall execution cycle consists of a *parse* step, which creates a prepared statement from a textual query string; a *bind* step, which creates a portal given a prepared statement and values for any needed parameters; and an *execute* step that runs a portal's query. One of the advantages of extended query protocol is preventing SQL injection attacks.
 
-![Example message flow of extended query (Close message is not included)](/images/PreparedStatement_Msg_flow.png)
+![Example message flow of extended query (Close message is not included)](/images/data-protocols-formats/frontent-backend/PreparedStatement_Msg_flow.png)
 
 In the extended protocol, the frontend first sends a [Parse](#parse-p) message, which contains a textual query string. The query string leaves certain values (must be *SQL literals*; otherwise a syntax error is reported) unspecified with parameter placeholders (i.e. question mark '?'). The response is either [ParseComplete](#parsecomplete-1) or [ErrorResponse](#errorresponse-e).
 
@@ -525,7 +525,7 @@ Then the frontend should send a [VerifiedFile#emptyqueryresponse-imessage specif
 - In *copy-local-file* mode, for each file to load, the backend sends a [LoadFile](#loadfile-h) message to ask for data from a file. The frontend should then send zero or more [CopyData](#copydata-d) messages, forming a stream of input data. The message boundaries are not required to have anything to do with row boundaries, although that is often a reasonable choice. The frontend should send a [EndOfBatchRequest](#endofbatchrequest-j) message to indicate that a batch of rows has been sent, and the frontend is expecting an acknowledgment and possibly rejected row descriptions from the backend. The backend should then send zero or more [WriteFile](#writefile-o) messages for rejected row descriptions and a [EndOfBatchResponse](#endofbatchresponse-j) message for acknowledgement of data loading from this file. When the backend finishes asking for data from all files, it sends a [CopyDoneResponse](#copydoneresponse-c) message.
 
 <figure>                                                               
- <img src="/images/CopyLocalFile_Msg_flow.png"                                   
+ <img src="/images/data-protocols-formats/frontent-backend/CopyLocalFile_Msg_flow.png"                                   
       title="Example message flow of COPY FROM LOCAL FILE"
       width="400"
       alt="Example message flow of COPY FROM LOCAL FILE" />                   
@@ -535,7 +535,7 @@ Then the frontend should send a [VerifiedFile#emptyqueryresponse-imessage specif
 - In *copy-local-stdin* mode, the backend sends a [CopyInResponse](#copyinresponse-g) message to the frontend to ask for data. Same as in *copy-local-file* mode, the frontend should send zero or more [#verifyfiles-fkilink") messages, forming a stream of input data, and a [EndOfBatchRequest](#endofbatchrequest-j) message and then receive zero or more [WriteFile](F#copy-operations_/_Back_End_Protocol#En#copy-local-modede, there will be no incoming message until the frontend send a [CopyDone](#copydone-c) message to end this STDIN loading.
 
 <figure>
-  <img src="/images/CopyLocalStdin_Msg_flow.png"                                  
+  <img src="/images/data-protocols-formats/frontent-backend/CopyLocalStdin_Msg_flow.png"                                  
        title="Example message flow of COPY FROM LOCAL STDIN"
        width="350"
        alt="Example message flow of COPY FROM LOCAL STDIN"
@@ -556,7 +556,7 @@ This protocol comes from PostgreSQL and is (partially) supported in Vertica serv
 
 Copy-stdin mode is initiated when the backend executes a *COPY FROM STDIN* SQL statement (not "COPY FROM LOCAL STDIN") in a [Query](#query-q) message. The backend might send [ParameterStatus](#parameterstatus-s) messages, and then a [CopyInResponse](#copyinresponse-g) message to the frontend to ask for data. The frontend should send zero or more [CopyData](#copydata-d) messages, forming a stream of input data, and a [CopyDone](Front_End_/_Back_End_Protocol#CopyDone_.27c.27 "wi#endofbatchrequest-jcess the command and send a [CommandComplete](#commandcomplete-c) message indicating the end of the COPY command. The query string might contain multiple SQL commands, the backend will return to the command-processing mode of [Simple Query protocol](#simple-query) when a COPY command ended. ReadyForQuery will always be sent when the query string is complete.
 
-![Example message flow of COPY FROM STDIN](/images/CopyStdin_Msg_flow.png)
+![Example message flow of COPY FROM STDIN](/images/data-protocols-formats/frontent-backend/CopyStdin_Msg_flow.png)
 
 In the event of a frontend-detected error during *copy-stdin* mode, the frontend can terminate it by sending a [CopyFail](#copyfail-f) or a [CopyError](#copyerror-e) message, which will cause the COPY SQL statement to fail with an ErrorResponse. In the event of a backend-detected error (including receipt of a CopyFail or a CopyError message), the backend will issue an ErrorResponse message, any subsequent CopyData, CopyDone, CopyFail or CopyError messages issued by the frontend will simply be dropped, and ReadyForQuery is issued.
 
