@@ -799,6 +799,16 @@ This section describes the detailed format of each message. Each message is clas
 #### StartupRequest
 
 <table>
+   <thead>
+      <tr>
+         <th>
+            <p>Type</p>
+         </th>
+         <th>
+            <p>Description</p>
+         </th>
+      </tr>
+   </thead>
    <tbody>
       <tr>
          <td>
@@ -952,6 +962,12 @@ This section describes the detailed format of each message. Each message is clas
                      <td>client_os_user_name</td>
                      <td>
                         <p>A string distinguish the OS login username of this client.</p>
+                     </td>
+                  </tr>
+                  <tr>
+                     <td>client_os_hostname</td>
+                     <td>
+                        <p>A string distinguish the OS hostname of this client.</p>
                      </td>
                   </tr>
                   <tr>
@@ -1469,6 +1485,10 @@ Support since Server v12.0SP3
 ## Summary of Changes since Protocol 3.0
 
 ### Protocol 3.14
+
+Changes include:
+- client_os_hostname support. Format change in the [StartupRequest](#startuprequest) message. New 'client_os_hostname' parameter. Allow client's OS hostname to be recorded in Sessions Table.
+
 *Support since Server v12.0SP4*
 
 ### Protocol 3.13
