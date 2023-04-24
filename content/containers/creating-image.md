@@ -30,7 +30,7 @@ For additional container file guidance, refer to [Best practices for writing Doc
 
 ## Multistage Build
 
-Vertica uses a multistage build to reduce the size of the final Docker image. Each `RUN` command adds a new layer to the Docker image. Each layer performs work using the the previous layer, resulting in leftover build artifacts that increase the image size. Using a multistage build takes the final result of the first stage and use it as a single layer in the second stage, removing any unnecessary artifacts created by intermediary layers during any previous stages
+Vertica uses a multistage build to reduce the size of the final Docker image. Each `RUN` command adds a new layer to the Docker image. Each layer performs work using the previous layer, resulting in leftover build artifacts that increase the image size. Using a multistage build takes the final result of the first stage and use it as a single layer in the second stage, removing any unnecessary artifacts created by intermediary layers during any previous stages.
 
 ## Setting Global ARG Variables
 
@@ -156,14 +156,14 @@ To begin, update all packages:
 ```
 #### Vertica and Admintools Required Packages
 
-Vertica and [Admintools](https://www.vertica.com/docs/latest/HTML/Content/Authoring/AdministratorsGuide/AdminTools/AdministrationToolsReference.htm) r#equire the following packages to function properly:
+Vertica and [Admintools](https://www.vertica.com/docs/latest/HTML/Content/Authoring/AdministratorsGuide/AdminTools/AdministrationToolsReference.htm) require the following packages to function properly:
 
 ```
   && yum install -y \  
      cronie \  
      dialog \  
      iproute \  
- #    mcelog \  
+     mcelog \  
      openssh-server \  
      openssh-clients \  
      openssl \  
@@ -182,21 +182,21 @@ Create the required **verticadba** group and add the **dbadmin** user:
 ```
 #### Install the Locally-Sourced RPM
 
-I#nstall the RPM from the `docker-vertica/packages` directory in the container `/tmp` directory:
+Install the RPM from the `docker-vertica/packages` directory in the container `/tmp` directory:
 
 ```
   && yum localinstall -q -y /tmp/${VERTICA_RPM} \
 ```
 #### Run install_vertica Script
 
-To prepare the Vertica environment, run the [install_vertica script](https://www.vertica.com/docs/11.0.x/HTML/Content/Authoring/InstallationGuide/I#nstallingVertica/InstallVerticaScript.htm):
+To prepare the Vertica environment, run the [install_vertica script](https://www.vertica.com/docs/latest/HTML/Content/Authoring/InstallationGuide/InstallingVertica/InstallVerticaScript.htm):
 
 ```
   && /opt/vertica/sbin/install_vertica \  
   --accept-eula \  
   --debug \  
   --dba-user-password-disabled \  
- # --failure-threshold NONE \  
+  --failure-threshold NONE \  
   --license CE \  
   --hosts 127.0.0.1 \  
   --no-system-configuration \  
@@ -212,7 +212,7 @@ If you used the [Community Edition license](https://www.vertica.com/landing-page
   && mkdir -p /home/dbadmin/licensing/ce \  
   && cp -r /opt/vertica/config/licensing/* /home/dbadmin/licensing/ce/ \
 ```
-Configure [logrotate](https://www.vertica.com/docs/11.0.x/HTML/Content/Authoring/AdministratorsGuide/Monitoring/Vertica/RotatingLogFiles.htm) to simplify l#og file administration:
+Configure [logrotate](https://www.vertica.com/docs/11.0.x/HTML/Content/Authoring/AdministratorsGuide/Monitoring/Vertica/RotatingLogFiles.htm) to simplify log file administration:
 
 ```
   && mkdir -p /home/dbadmin/logrotate \  
