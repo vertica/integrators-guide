@@ -1488,6 +1488,8 @@ Support since Server v12.0SP3
 ### Protocol version change?
 - Workload
 - Format change in [WriteFile](#writefile-o). 'protocol_features' parameter in [StartupRequest](#startuprequest) message support new feature '???'.
+- New protocol messages content logged by the DC Table?
+- OAuth updates?
 
 *Support since Server v23.3.0*
 
