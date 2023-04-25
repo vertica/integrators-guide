@@ -519,7 +519,7 @@ Once a portal exists, it can be executed using an [Execute](#execute-e) message.
 
 At completion of each series of extended-query messages, the frontend should issue a [Sync](#sync-s) message. This parameterless message causes the backend to close the current transaction if it's not inside a BEGIN/COMMIT transaction block ("close" meaning to commit if no error, or roll back if error). Then a ReadyForQuery response is issued. The purpose of [Sync](#sync-s) is to provide a resynchronization point for error recovery. When an error is detected while processing any extended-query message, the backend issues ErrorResponse, then reads and discards messages until a [Sync](#sync-s) is reached, then issues ReadyForQuery and returns to normal message processing. (But note that no skipping occurs if an error is detected while processing Sync — this ensures that there is one and only one ReadyForQuery sent for each Sync.)
 
-In most scenarios the frontend should issue a [Describe](#describe-d) before issuing [Execute](#execute-e), to ensure that it knows how to interpret the results it will get back. The [Describe](#describe-d) message (statement variant) specifies the name of an existing prepared statement. The response is a [ParameterDescription](#parameterdescription-t) message describing the parameters needed by the statement, followed by a [RowDescription](#rowdescription-t) message describing the rows that will be returned when the statement is eventually executed (or a [NoData](#nodata-n) message if the #copy-operationsandDescription](Front_End_/_Back_End_Protocol#CommandDescription_.27m.27 "wikilink") message describing the type of command to be executed and any semantically-equivalent COPY statement. ErrorResponse is issued if there is no such prepared statement. Note that since [Bind](#bind-b) has not yet been issued, the formats to be used for returned columns are not yet known to the backend; the format code fields in the [RowDescription](#rowdescription-t) message will be zeroes in this case. The [Describe](#describe-d) message (portal variant) specifies the name of an existing portal (or #copy-operations a [RowDescription](#rowdescription-t) message describing the rows that will be r#emptyqueryresponse-i_Protocol#NoData_.27n.27 "wikilink") message if the portal does not #copy-operationsif there is no such portal.
+In most scenarios the frontend should issue a [Describe](#describe-d) before issuing [Execute](#execute-e), to ensure that it knows how to interpret the results it will get back. The [Describe](#describe-d) message (statement variant) specifies the name of an existing prepared statement. The response is a [ParameterDescription](#parameterdescription-t) message describing the parameters needed by the statement, followed by a [RowDescription](#rowdescription-t) message describing the rows that will be returned when the statement is eventually executed (or a [NoData](#nodata-n) message if the statement will not return rows), and followed by a [CommandDescription](#commanddescription-m) message describing the type of command to be executed and any semantically-equivalent COPY statement. ErrorResponse is issued if there is no such prepared statement. Note that since [Bind](#bind-b) has not yet been issued, the formats to be used for returned columns are not yet known to the backend; the format code fields in the [RowDescription](#rowdescription-t) message will be zeroes in this case. The [Describe](#describe-d) message (portal variant) specifies the name of an existing portal (or an empty string for the unnamed portal). The response is a [RowDescription](#rowdescription-t) message describing the rows that will be returned by executing the portal; or a [NoData](#nodata-n) message if the portal does not contain a query that will return rows; or ErrorResponse if there is no such portal.
 
 The [Close](#close-c) message closes an existing prepared statement or portal and releases resources. It is not an error to issue Close against a nonexistent statement or portal name. The response is normally [CloseComplete](#closecomplete-3), but could be ErrorResponse if some difficulty is encountered while releasing resources. Note that closing a prepared statement implicitly closes any open portals that were constructed from that statement.
 
@@ -531,9 +531,9 @@ The COPY command allows high-speed bulk data transfer from the client to the ser
 
 #### Copy-Local mode
 
-Copy-local mode is initiated when the backend executes a *COPY FROM LOCAL FILES* or *COPY FROM LOCAL STDIN* SQL statement in [Query](#query-q) message. The backend sends a [RowDescription](#rowdescription-t) message (For the DataRow message later indicating the number of rows loaded.) and a [VerifyFiles](#verifyfiles-f) message to the fron#copy-operationsnd, and sends them back to the frontend in [VerifyFiles](#verifyfiles-f) message. If COPY command uses the REJECTED DATA and/or EXCEPTIONS parameters, VerifyFiles message contains filenames for them. In *copy-local-file* mode, VerifyFiles message also contains input filenames. The frontend has to verify that these input files exist and are readable, and rejected data and exceptions files are writable.
+Copy-local mode is initiated when the backend executes a *COPY FROM LOCAL FILES* or *COPY FROM LOCAL STDIN* SQL statement in [Query](#query-q) message. The backend sends a [RowDescription](#rowdescription-t) message (For the DataRow message later indicating the number of rows loaded.) and a [VerifyFiles](#verifyfiles-f) message to the frontend. The backend parses the file names out of the command, and sends them back to the frontend in [VerifyFiles](#verifyfiles-f) message. If COPY command uses the REJECTED DATA and/or EXCEPTIONS parameters, VerifyFiles message contains filenames for them. In *copy-local-file* mode, VerifyFiles message also contains input filenames. The frontend has to verify that these input files exist and are readable, and rejected data and exceptions files are writable.
 
-Then the frontend should send a [VerifiedFile#emptyqueryresponse-imessage specifying a list of input files that the backend can ask to load. In *copy-local-stdin* mode, this is an empty list. In *copy-local-file* mode, this must be a non-empty list, because sending an empty list of files will make server kill the session. If the backend does not send a ErrorResponse, it is ready to copy data from STDIN/files. The backend might send [ParameterStatus](#parameterstatus-s) messages, then
+Then the frontend should send a [VerifiedFile](#emptyqueryresponse-i) message specifying a list of input files that the backend can ask to load. In *copy-local-stdin* mode, this is an empty list. In *copy-local-file* mode, this must be a non-empty list, because sending an empty list of files will make server kill the session. If the backend does not send a ErrorResponse, it is ready to copy data from STDIN/files. The backend might send [ParameterStatus](#parameterstatus-s) messages, then
 
 - In *copy-local-file* mode, for each file to load, the backend sends a [LoadFile](#loadfile-h) message to ask for data from a file. The frontend should then send zero or more [CopyData](#copydata-d) messages, forming a stream of input data. The message boundaries are not required to have anything to do with row boundaries, although that is often a reasonable choice. The frontend should send a [EndOfBatchRequest](#endofbatchrequest-j) message to indicate that a batch of rows has been sent, and the frontend is expecting an acknowledgment and possibly rejected row descriptions from the backend. The backend should then send zero or more [WriteFile](#writefile-o) messages for rejected row descriptions and a [EndOfBatchResponse](#endofbatchresponse-j) message for acknowledgement of data loading from this file. When the backend finishes asking for data from all files, it sends a [CopyDoneResponse](#copydoneresponse-c) message.
 
@@ -545,7 +545,7 @@ Then the frontend should send a [VerifiedFile#emptyqueryresponse-imessage specif
       <figcaption aria-hidden="true">Example message flow of COPY FROM LOCAL FILE</figcaption>
  </figure> 
 
-- In *copy-local-stdin* mode, the backend sends a [CopyInResponse](#copyinresponse-g) message to the frontend to ask for data. Same as in *copy-local-file* mode, the frontend should send zero or more [#verifyfiles-fkilink") messages, forming a stream of input data, and a [EndOfBatchRequest](#endofbatchrequest-j) message and then receive zero or more [WriteFile](F#copy-operations_/_Back_End_Protocol#En#copy-local-modede, there will be no incoming message until the frontend send a [CopyDone](#copydone-c) message to end this STDIN loading.
+- In *copy-local-stdin* mode, the backend sends a [CopyInResponse](#copyinresponse-g) message to the frontend to ask for data. Same as in *copy-local-file* mode, the frontend should send zero or more [CopyData](#copydata-d) messages, forming a stream of input data, and a [EndOfBatchRequest](#endofbatchrequest-j) message and then receive zero or more [WriteFile](#writefile-o) messages and an [EndOfBatchRequest](#endofbatchrequest-j) message. In this mode, there will be no incoming message until the frontend send a [CopyDone](#copydone-c) message to end this STDIN loading.
 
 <figure>
   <img src="/images/data-protocols-formats/frontent-backend/CopyLocalStdin_Msg_flow.png"                                  
@@ -559,7 +559,7 @@ Then the frontend should send a [VerifiedFile#emptyqueryresponse-imessage specif
 
 > **Security concerns**: The frontend must verify the file the backend asks for reading ([LoadFile](#loadfile-h)) or writing ([WriteFile](#writefile-o) is not tampered.
 
-After loading all the data, the backend sends a [DataRow](#datarow-d) message indicating the number of rows loaded, and then a [CommandComplete](#commandcomplete-c) message indicating the end of the COPY command. The query string might contain multiple SQL commands, the backend will return to the command-processing mode of [Simple Query protocol](#simple-query) when a COPY command ended#emptyqueryresponse-ite.
+After loading all the data, the backend sends a [DataRow](#datarow-d) message indicating the number of rows loaded, and then a [CommandComplete](#commandcomplete-c) message indicating the end of the COPY command. The query string might contain multiple SQL commands, the backend will return to the command-processing mode of [Simple Query protocol](#simple-query) when a COPY command ended. ReadyForQuery will always be sent when the query string is complete.
 
 In the event of a frontend-detected error during *copy-local* mode, the frontend can terminate it by sending a [CopyError](#copyerror-e) message, which will cause the COPY SQL statement to fail with an ErrorResponse. In the event of a backend-detected error (including receipt of a CopyError message), the backend will issue an ErrorResponse message, any subsequent messages issued by the frontend will simply be dropped, and ReadyForQuery is issued.
 
@@ -567,13 +567,13 @@ In the event of a frontend-detected error during *copy-local* mode, the frontend
 
 This protocol comes from PostgreSQL and is (partially) supported in Vertica server but not implemented by most Vertica clients. The backend cannot report the number of rows loaded after copy, and possibly rejected row descriptions.
 
-Copy-stdin mode is initiated when the backend executes a *COPY FROM STDIN* SQL statement (not "COPY FROM LOCAL STDIN") in a [Query](#query-q) message. The backend might send [ParameterStatus](#parameterstatus-s) messages, and then a [CopyInResponse](#copyinresponse-g) message to the frontend to ask for data. The frontend should send zero or more [CopyData](#copydata-d) messages, forming a stream of input data, and a [CopyDone](Front_End_/_Back_End_Protocol#CopyDone_.27c.27 "wi#endofbatchrequest-jcess the command and send a [CommandComplete](#commandcomplete-c) message indicating the end of the COPY command. The query string might contain multiple SQL commands, the backend will return to the command-processing mode of [Simple Query protocol](#simple-query) when a COPY command ended. ReadyForQuery will always be sent when the query string is complete.
+Copy-stdin mode is initiated when the backend executes a *COPY FROM STDIN* SQL statement (not "COPY FROM LOCAL STDIN") in a [Query](#query-q) message. The backend might send [ParameterStatus](#parameterstatus-s) messages, and then a [CopyInResponse](#copyinresponse-g) message to the frontend to ask for data. The frontend should send zero or more [CopyData](#copydata-d) messages, forming a stream of input data, and a [CopyDone](#copydone-c) message to end this STDIN loading. The backend should process the command and send a [CommandComplete](#commandcomplete-c) message indicating the end of the COPY command. The query string might contain multiple SQL commands, the backend will return to the command-processing mode of [Simple Query protocol](#simple-query) when a COPY command ended. ReadyForQuery will always be sent when the query string is complete.
 
 ![Example message flow of COPY FROM STDIN](/images/data-protocols-formats/frontent-backend/CopyStdin_Msg_flow.png)
 
 In the event of a frontend-detected error during *copy-stdin* mode, the frontend can terminate it by sending a [CopyFail](#copyfail-f) or a [CopyError](#copyerror-e) message, which will cause the COPY SQL statement to fail with an ErrorResponse. In the event of a backend-detected error (including receipt of a CopyFail or a CopyError message), the backend will issue an ErrorResponse message, any subsequent CopyData, CopyDone, CopyFail or CopyError messages issued by the frontend will simply be dropped, and ReadyForQuery is issued.
 
-Copy-stdin mode can also be initiated via [Extended Query protocol](#extended-query), the COPY command is issued in a [Parse](#parse-p) message. The workflow is the same a#commandcomplete-c of [Extended Query protocol](#extended-query) except that the backend should send a [CopyInResponse](#copyinresponse-g) message after receiving an [Execute](#execute-e) message. Then the frontend should send zero or more [CopyData](#copydata-d) or [CopyFail](#copyfail-f)/[CopyError](#copyerror-e) #verifyfiles-fons
+Copy-stdin mode can also be initiated via [Extended Query protocol](#extended-query), the COPY command is issued in a [Parse](#parse-p) message. The workflow is the same as normal processing of [Extended Query protocol](#extended-query) except that the backend should send a [CopyInResponse](#copyinresponse-g) message after receiving an [Execute](#execute-e) message. Then the frontend should send zero or more [CopyData](#copydata-d) messages, forming a stream of input data, and a [CopyDone](#copydone-c) or [CopyFail](#copyfail-f)/[CopyError](#copyerror-e) message to end the STDIN loading.
 
 ### Asynchronous Operations
 
@@ -1529,14 +1529,9 @@ message. New oauth_access_token parameter.
 
 Changes include:
 
-- Complex Types support (JDBC only): Format change in the
-[RowDescription](#rowdescription-t)
-message. OID change for 1D Arrays & Sets#copy-operationses include:
+- Complex Types support (JDBC only): Format change in the [RowDescription](#rowdescription-t) message. OID change for 1D Arrays & Sets.
 
-- JDBC Complex Type Metadata support: Server changed the way it
-represents some column metadata in v_catalog.types.
-
-*Support since Server v10.1SP1*
+*Support since Server v11.0*
 
 ### Protocol 3.9
 Changes include:
@@ -1548,7 +1543,7 @@ JDBC Complex Type Metadata support: Server changed the way it represents some co
 
 Changes include:
 
-- Native#emptyqueryresponse-i) instead of type CHAR (object ID = 8).
+- Native UUID type support: Present the column as type UUID (object ID = 20) instead of type CHAR (object ID = 8).
 
 *Support since Server v9.0*
 
@@ -1556,28 +1551,20 @@ Changes include:
 
 Changes include:
 
-- Client Backward compatibility (Server's protocol version is older
-than the client's): Format change in the
-[StartupRequest](#startuprequest)
+- Client Backward compatibility (Server's protocol version is older than the client's): Format change in the [StartupRequest](#startuprequest)
 message.
 
-- The existing protocol_version parameter is now sent back to the
-client in a ParameterStatus message. It contains the protocol version
-supported by the server.
+- The existing protocol_version parameter is now sent back to the client in a ParameterStatus message. It contains the protocol version supported by the server.
 
 *Support since Server v8.0*
 
-This has been verified by reviewing the startup method in the JDBC
-driver's protocol stream in the 9.1 source branch. The exact protocol
-version each was added is TBD.
+This has been verified by reviewing the startup method in the JDBC driver's protocol stream in the 9.1 source branch. The exact protocol version each was added is TBD.
 
 ### Protocol 3.6
 
 Changes include:
 
-- Format change in the
-[StartupRequest](#startuprequest)
-message: New parameters added:
+- Format change in the [StartupRequest](#startuprequest) message: New parameters added:
   - mars
   - client_os_user_name
 - New new MARS related messages.
@@ -1598,23 +1585,18 @@ message
   - protocol_version
   - binary_data_protocol
 
-- Server backward compatibility (Client's protocol version is older
-than the server's)
+- Server backward compatibility (Client's protocol version is older than the server's)
 
 *Support since Server v7.1*
 
 ### Protocol 3.4 and before
 
 These are functional but buggy versions. Changes include:
-- Server returns the error code (V) in [ErrorResponse](#errorresponse-e)
-and [NoticeResponse](#noticeresponse-n)
-messages.
-- [Connection Load Balancing](Front_End_/_Back_End_Protocol#Connection_load_balancing "wikilink")
-support.
-- User-defined Types support: Format change in the [RowDescription](#rowdescription-t)
-message.
+- Server returns the error code (V) in [ErrorResponse](#errorresponse-e) and [NoticeResponse](#noticeresponse-n) messages.
+- [Connection Load Balancing](#connection-load-balancing) support.
+- User-defined Types support: Format change in the [RowDescription](#rowdescription-t) message.
 - Support only one portal. The portal name required in some messages is actually ignored by the backend.
-- #copy-operationsommandDescription_.27m.27 "wikilink") message.
+- New [CommandDescription](#commanddescription-m) message.
 
 > Note: As of protocol version 3.4, the [StartupRequest](#startuprequest) message includes the following parameters:
 > - user
@@ -1622,4 +1604,7 @@ message.
 > - client_pid
 > - client_label
 > - client_type
-> - client_v#emptyqueryresponse-i v7.0*
+> - client_version 
+> - client_os
+
+*Support since Server v7.0*
