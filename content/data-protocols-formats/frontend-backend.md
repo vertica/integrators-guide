@@ -992,8 +992,9 @@ This section describes the detailed format of each message. Each message is clas
                   <tr>
                      <td>protocol_features</td>
                      <td>
-                        <p>A JSON string of features requested by the driver. Each feature will return a ParameterStatus message. Currently supports the following features:
-'request_complex_types' - false is the default. If set to true, server will return complex type metadata. Otherwise, complex types will be treated as long varchar. Example value: {"request_complex_types":true}</p>
+                        <p>A JSON string of features requested by the driver. Each feature will return a ParameterStatus message. Currently supports the following features:</p>
+<ul>
+               <li>'request_complex_types' - false is the default. If set to true, server will return complex type metadata. Otherwise, complex types will be treated as long varchar.</li></ul><p>Example value: {"request_complex_types":true}</p>
                      </td>
                   </tr>
                   <tr>
@@ -1483,6 +1484,12 @@ This DC Table is turned on by default. As with other session DC tables, this tab
 Support since Server v12.0SP3
 
 ## Summary of Changes since Protocol 3.0
+
+### Protocol version change?
+- Workload
+- Format change in [WriteFile](#writefile-o). 'protocol_features' parameter in [StartupRequest](#startuprequest) message support new feature '???'.
+
+*Support since Server v23.3.0*
 
 ### Protocol 3.14
 
