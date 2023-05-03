@@ -4,7 +4,7 @@ linkTitle: "Frontend and backend protocols"
 weight: 20
 ---
 
-Vertica uses a message-based protocol for communication between frontends and backends (clients and servers). The protocol is supported over TCP/IP sockets. This document describes version 3.14 of the protocol.
+Vertica uses a message-based protocol for communication between frontends and backends (clients and servers). The protocol is supported over TCP/IP sockets. This document describes version 3.15 of the protocol.
 
 For purposes of the protocol, the terms "backend" and "server" are interchangeable; likewise "frontend" and "client" are interchangeable. See [vertica-python](https://github.com/vertica/vertica-python) for a frontend implementation reference of the protocol.
 
@@ -1485,7 +1485,7 @@ Support since Server v12.0SP3
 
 ## Summary of Changes since Protocol 3.0
 
-### Protocol version change?
+### Protocol 3.15
 - Workload
 - Format change in [WriteFile](#writefile-o). 'protocol_features' parameter in [StartupRequest](#startuprequest) message support new feature '???'.
 - New protocol messages content logged by the DC Table?
