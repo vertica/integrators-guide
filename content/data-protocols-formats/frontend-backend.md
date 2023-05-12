@@ -1435,6 +1435,7 @@ This section describes the fields that may appear in [ErrorResponse](#errorrespo
 | V                    | Error code |
 | W                    | Where: an indication of the context in which the error occurred. |
 
+
 ## Data Collector utility
 
 Data Collector component ClientServerMessages (table `V_INTERNAL.dc_client_server_messages`) collects a subset of Client-Server Protocol Messages sent between the Front End and Back End. Not all protocol messages are currently logged by the Data Collector. Additionally, some messages has verbose data available.
