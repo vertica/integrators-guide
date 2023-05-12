@@ -27,7 +27,6 @@ Normal operation has additional sub-protocols for special operations such as COP
 
 All communication is through a stream of messages. The byte order of all messages are big-endian (A special case in [WriteFile](#writefile-o) message). All data sending to or coming from the backend are represented as UTF-8.
 
-<a id="formats-formatcodes"></a>
 ### Formats and Format Codes
 
 Data of a particular SQL data type might be transmitted in either "text" format or "binary" format. The desired format for any value is specified by a *format code*. Text has format code zero, binary has format code one, and all other format codes are reserved for future definition.
@@ -71,12 +70,13 @@ The text representation of values is whatever strings are produced and accepted 
          </td>
          <td>
             <p>A sequence of UTF-8 encoding bytes.</p>
-            <p>:* UTF-8 strings can contain multi-byte characters. Therefore, number
+            <ul>
+               <li> UTF-8 strings can contain multi-byte characters. Therefore, number
                of characters in the string may not equal the number of bytes.
-            </p>
-            <p>:* Strings shorter than the specified length are right-padded with
-               spaces.
-            </p>
+               </li>
+               <li> Strings shorter than the specified length are right-padded with spaces.
+               </li>
+            </ul>
          </td>
       </tr>
       <tr>
@@ -87,7 +87,7 @@ The text representation of values is whatever strings are produced and accepted 
             <p>Variable-length</p>
          </td>
          <td rowspan="2">
-            <p>A sequence of UTF-8 encoding bytes. Remember that UTF-8 strings
+            <p>A sequence of UTF-8 encoding bytes.<br>Remember that UTF-8 strings
                can contain multi-byte characters. Therefore, number of characters in
                the string may not equal the number of bytes.
             </p>
@@ -125,11 +125,11 @@ The text representation of values is whatever strings are produced and accepted 
             <p>NUMERIC</p>
          </td>
          <td>
-            <p>N (N = (precision//19+1)*8)</p>
+            <p><i>N</i> <small>(N = (precision//19+1)*8)</small></p>
          </td>
          <td>
-            <p>N-byte signed integer containing the unscaled value. Scale is
-               calculated separately with <a href="#rowdescription">RowDescription's</a> type modifier.
+            <p><i>N</i>-byte signed integer containing the unscaled value. Scale is
+               calculated separately with <a href="#rowdescription-t">RowDescription</a>'s type modifier.
             </p>
          </td>
       </tr>
@@ -200,7 +200,7 @@ The text representation of values is whatever strings are produced and accepted 
                   the UTC time zone.
                </li>
                <li>Lower 24 bits contain time zone as the UTC offset in seconds
-                  calculated as follows:<br>Actual time zone = 86400(24hrs) - this 3-byte value as integer
+                  calculated as follows:<br><i>Actual time zone</i> = 86400<small>(24hrs)</small> - this 3-byte value as integer
                </li>
             </ul>
          </td>
@@ -214,7 +214,7 @@ The text representation of values is whatever strings are produced and accepted 
          </td>
          <td>
             <p>64-bit integer containing the number of microseconds since Julian
-               day: Jan 01 2000 00:00:00.
+               day: <i>Jan 01 2000 00:00:00</i>.
             </p>
          </td>
       </tr>
@@ -227,7 +227,7 @@ The text representation of values is whatever strings are produced and accepted 
          </td>
          <td>
             <p>64-bit integer containing the number of microseconds since Julian
-               day: Jan 01 2000 00:00:00 in the UTC timezone.
+               day: <i>Jan 01 2000 00:00:00</i> in the UTC timezone.
             </p>
          </td>
       </tr>
@@ -285,7 +285,7 @@ The text representation of values is whatever strings are produced and accepted 
    </tbody>
 </table>
 
-> **Note**: While PostgreSQL lets you change the format on a per-column/type basis in the protocol, Vertica currently does not honor that and instead does it as a session-level setting. So unfortunately that means its an all-or-nothing implementation - all data types must be implemented. To opt into binary format protocol for data reads from backend (queries), the frontend have to set the [StartupRequest](#startuprequest) message to include parameter 'binary_data_protocol' set to '1' ('0' is the default, which is the string format protocol), and set the [Bind](#bind-b) message's last two fields (result-column format code) as '1'. No Vertica clients currently support data writes (server-prepared statement bind values) to the backend in binaryformat.
+> **Note**: While PostgreSQL lets you change the format on a per-column/type basis in the protocol, Vertica currently does not honor that and instead does it as a session-level setting. So unfortunately that means its an all-or-nothing implementation - all data types must be implemented. To opt into binary format protocol for data reads from backend (queries), the frontend have to set the [StartupRequest](#startuprequest) message to include parameter 'binary_data_protocol' set to '1' ('0' is the default, which is the text format protocol), and set the [Bind](#bind-b) message's last two fields (result-column format code) as '1'. No Vertica clients currently support data writes (server-prepared statement bind values) to the backend in binary format.
 
 ## Message Flow
 
