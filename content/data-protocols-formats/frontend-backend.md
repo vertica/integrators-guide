@@ -458,7 +458,7 @@ If 'auth_category' parameter is not set, the server still check for the token in
 A simple query cycle is initiated by the frontend sending a [Query](#query-q) message to the backend. The message includes an SQL command (or commands) expressed as a text string. The backend then sends one or more response messages depending on the contents of the query command string, and finally a [ReadyForQuery](#readyforquery-z) response message. ReadyForQuery informs the frontend that it can safely send a new command.
 
 
-![Example message flow of simple query with data rows returned](/images/data-protocols-formats/frontent-backend/SimpleQuery_Msg_flow.png)
+![Example message flow of simple query with data rows returned](/images/data-protocols-formats/frontent-backend/SimpleQuery_Msg_flow.png "Example message flow of simple query with data rows returned")
 
 The possible response messages from the backend are:
 
@@ -563,7 +563,7 @@ Then the frontend should send a [VerifiedFile](#emptyqueryresponse-i) message sp
 </figure>
 
 
-> **Security concerns**: The frontend must verify the file the backend asks for reading ([LoadFile](#loadfile-h)) or writing ([WriteFile](#writefile-o) is not tampered.
+> **Security concerns**: The frontend must verify the file the backend asks for reading ([LoadFile](#loadfile-h)) or writing ([WriteFile](#writefile-o)) is not tampered.
 
 After loading all the data, the backend sends a [DataRow](#datarow-d) message indicating the number of rows loaded, and then a [CommandComplete](#commandcomplete-c) message indicating the end of the COPY command. The query string might contain multiple SQL commands, the backend will return to the command-processing mode of [Simple Query protocol](#simple-query) when a COPY command ended. ReadyForQuery will always be sent when the query string is complete.
 
@@ -793,7 +793,7 @@ This section describes the detailed format of each message. Each message is clas
 |:-----------|:------------|
 | Byte1('Q') | Identifies the message as a simple query.            |
 | Int32      | Length of message contents in bytes, including self. |
-| String     | The query string itself.                             |
+| String     | The query string itself.  |
 
 #### SSLRequest
 
@@ -842,8 +842,8 @@ This section describes the detailed format of each message. Each message is clas
                      <dd>
                         The backend would use the frontend's requested protocol version to find
                         the highest common protocol version in use for both frontend and
-                        backend, and send this effective protocol version back in a <a
-                           href="#parameterstatus">ParameterStatus</a> message, with parameter name
+                        backend, and send this <strong>effective</strong> protocol version back in a <a
+                           href="#parameterstatus-s">ParameterStatus</a> message, with parameter name
                         'protocol_version'. The frontend can use this value to enable/disable
                         functionalities.
                      </dd>
@@ -1510,7 +1510,7 @@ Changes include:
 
 - Extended Complex Type support. Format change in the [StartupRequest](#startuprequest) message. New 'protocol_features' parameter supporting 'request_complex_types'.
 - Fall-Through Authentication Filtering: Format change in the [StartupRequest](#startuprequest) message. New 'auth_category' parameter.
-- [OAuth 2.0 Authentication](#oauth2-authentication): add [AuthenticationOAuth](#authenticationoauth-r) message.
+- [OAuth 2.0 Authentication](#protocol-312) enhancement: add [AuthenticationOAuth](#authenticationoauth-r) message.
 
 *Support since Server v12.0SP2*
 
@@ -1518,9 +1518,9 @@ Changes include:
 
 Changes include:
 
-- OAuth 2.0 support: Format change in the
+- [OAuth 2.0 Authentication](#oauth2-authentication) support: Format change in the
 [StartupRequest](#startuprequest)
-message. New oauth_access_token parameter.
+message. New 'oauth_access_token' parameter.
 
 *Support since Server v11.1SP1*
 
@@ -1536,6 +1536,7 @@ Changes include:
 Changes include:
 
 JDBC Complex Type Metadata support: Server changed the way it represents some column metadata in v_catalog.types table.
+
 *Support since Server v10.1SP1*
 
 ### Protocol 3.8
@@ -1552,21 +1553,22 @@ Changes include:
 
 - Client Backward compatibility (Server's protocol version is older than the client's): Format change in the [StartupRequest](#startuprequest)
 message.
-
-- The existing protocol_version parameter is now sent back to the client in a ParameterStatus message. It contains the protocol version supported by the server.
+  - The existing protocol_version parameter is now sent back to the client in a [ParameterStatus](#parameterstatus-s) message. It contains the protocol version supported by the server.
 
 *Support since Server v8.0*
 
-This has been verified by reviewing the startup method in the JDBC driver's protocol stream in the 9.1 source branch. The exact protocol version each was added is TBD.
+<br>
+
+> The following has been verified by reviewing the startup method in the JDBC driver's protocol stream in the 9.1 source branch. The exact protocol version each was added is TBD.
 
 ### Protocol 3.6
 
 Changes include:
 
-- Format change in the [StartupRequest](#startuprequest) message: New parameters added:
+- Format change in the [StartupRequest](#startuprequest) message. New parameters added:
   - mars
   - client_os_user_name
-- New new MARS related messages.
+- New MARS related messages.
 
 *Support since Server v7.2*
 
@@ -1580,7 +1582,7 @@ message
   - New [AuthenticationHashPassword](#authenticationhashpassword-r)
 message
 
-- Format change in the [StartupRequest](#startuprequest) message: New parameters added:
+- Format change in the [StartupRequest](#startuprequest) message. New parameters added:
   - protocol_version
   - binary_data_protocol
 
@@ -1606,4 +1608,4 @@ These are functional but buggy versions. Changes include:
 > - client_version 
 > - client_os
 
-*Support since Server v7.0*
+*Support protocol 3.4 since Server v7.0*
