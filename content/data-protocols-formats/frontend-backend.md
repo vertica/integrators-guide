@@ -400,7 +400,7 @@ When the client requests access to a server, this is the process:
 8. The server grants access and sends a [AuthenticationOk](#authenticationok-r); or sends a [ErrorResponse](#errorresponse-e) to indicate failure.
 
 
-![Example message flow of GSS authentication](/images/data-protocols-formats/frontent-backend/GSSAuth_Msg_flow.png)
+![Example message flow of GSS authentication](/images/data-protocols-formats/frontent-backend/GSSAuth_Msg_flow.png "Example message flow of GSS authentication")
 
 #### OAuth2 authentication
 
@@ -408,13 +408,13 @@ OAuth lets client applications verify themselves to and receive an OAuth access 
 
 A client application should first configure the IDP and get the following parameters:
 
-- client_id: ID of the confidential client (application) registered in IDP. This is used by server to call introspection API to retrieve user grants; and used by client to retrieve tokens.
+- ***client_id***: ID of the confidential client (application) registered in IDP. This is used by server to call introspection API to retrieve user grants; and used by client to retrieve tokens.
 
-- client_secret: The secret of the confidential client (application) registered in IDP. This is used by server to call introspection API to retrieve user grants; and used by client to retrieve tokens.
+- ***client_secret***: The secret of the confidential client (application) registered in IDP. This is used by server to call introspection API to retrieve user grants; and used by client to retrieve tokens.
 
-- introspect_url: API used by server to introspect access token. This URL is exposed by IDP and must be accessible from server.
+- ***introspect_url***: API used by server to introspect access token. This URL is exposed by IDP and must be accessible from server.
 
-- token_url: API used by client to refresh the token. This URL is exposed by IDP and must be accessible from client.
+- ***token_url***: API used by client to refresh the token. This URL is exposed by IDP and must be accessible from client.
 
 ![Example message flow of OAuth authentication](/images/data-protocols-formats/frontent-backend/OAuth_Msg_flow.png)
 
@@ -422,24 +422,30 @@ Then in the server, create an OAuth authentication record with above parameters,
 
 The client application call the IDP token API to retrieve the following parameters:
 
-- access_token: Access tokens are the thing that applications use to make connection requests on behalf of a user.
+- ***access_token***: Access tokens are the thing that applications use to make connection requests on behalf of a user.
 
-- refresh_token: Refresh tokens are used to obtain a new access token.
+- ***refresh_token***: Refresh tokens are used to obtain a new access token.
 
-
-<figure>                                                               
-  <img src="/images/data-protocols-formats/frontent-backend/OAuth_refresh_Msg_flow.png"                                   
-       title="Example message flow of OAuth access token refresh"
-       width="350"
+<figure>
+  <img src="/images/data-protocols-formats/frontent-backend/OAuth_Msg_flow.png"                                   
+       title="Example message flow of OAuth authentication (Protocol 3.11)"
+       width="400"
        alt="Example message flow of OAuth access token refresh" />             
-  <figcaption aria-hidden="true">Example message flow of OAuth access     
-  token refresh</figcaption>                                              
+  <figcaption aria-hidden="true">Example message flow of OAuth authentication (Protocol 3.11)</figcaption>                                              
+</figure>
+
+<figure>
+  <img src="/images/data-protocols-formats/frontent-backend/OAuth_refresh_Msg_flow.png"                                   
+       title="Example message flow of OAuth access token refresh (Protocol 3.11)"
+       width="400"
+       alt="Example message flow of OAuth access token refresh" />             
+  <figcaption aria-hidden="true">Example message flow of OAuth access token refresh (Protocol 3.11)</figcaption>                                              
 </figure>
 
 
 #### (Protocol 3.11)
 
-In the [StartupRequest](#startuprequest), only access_token is required to be specified in **oauth_access_token** parameter, no client id/secret is included in the request. The 'user' parameter is optional. The backend validates token using OAuth Introspect query. In case oauth_access_token is valid and permissions are sufficient, the backend sends [AuthenticationOk](#authenticationok-r), otherwise it responds with an [ErrorResponse](#errorresponse-e). Token refresh flow can be triggered by frontend after the token validation (if token introspection fails).
+In the [StartupRequest](#startuprequest), only access_token is required to be specified in **oauth_access_token** parameter, no client id/secret is included in the request. The 'user' parameter can be an empty string. The backend validates token using OAuth Introspect query. In case oauth_access_token is valid and permissions are sufficient, the backend sends [AuthenticationOk](#authenticationok-r), otherwise it responds with an [ErrorResponse](#errorresponse-e). Token refresh flow can be triggered by frontend after the token validation (if token introspection fails).
 
 #### (Protocol 3.12)
 
