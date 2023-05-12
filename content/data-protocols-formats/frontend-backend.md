@@ -1437,18 +1437,18 @@ This section describes the fields that may appear in [ErrorResponse](#errorrespo
 
 ## Data Collector utility
 
-Data Collector component ClientServerMessages (table V_INTERNAL.dc_client_server_messages) collects a subset of Client-Server Protocol Messages sent between the Front End and Back End. Not all protocol messages are currently logged by the Data Collector. Additionally, some messages has verbose data available.
+Data Collector component ClientServerMessages (table `V_INTERNAL.dc_client_server_messages`) collects a subset of Client-Server Protocol Messages sent between the Front End and Back End. Not all protocol messages are currently logged by the Data Collector. Additionally, some messages has verbose data available.
 
-#### Logged Frontend Messages
+#### Logged Frontend Messages (FE)
 
-| Message (Character D) | Contents logged  |
+| Message (Character ID) | Contents logged  |
 |:----------------------|:-----------------|
 | Query ('Q') | Masked Query String |
-| Parse ('P') |statement name:masked query string |
+| Parse ('P') |statement name: masked query string |
 | Bind ('B')  | (empty)|
 | Execute ('E') | portal name |
-| Close ('C') | prepared Statement/portal name |
-| Describe ('D') | prepared Statement/portal name |
+| Close ('C') | prepared statement/portal name |
+| Describe ('D') | prepared statement/portal name |
 | Flush ('H') |  (empty) |
 | Sync ('S') |  (empty) |
 | Terminate ('X') |  (empty) |
@@ -1458,9 +1458,10 @@ Data Collector component ClientServerMessages (table V_INTERNAL.dc_client_server
 | Load Balance Request ('?') |  (empty) |
 | Cancel Request ('!') | "Canceled Session" [canceled session ID] |
 
-#### Logged Backend Messages
 
-| Message (Character D) | Contents logged  |
+#### Logged Backend Messages (BE)
+
+| Message (Character ID) | Contents logged  |
 |:----------------------|:-----------------|
 | Parse Complete ('1') | (empty) |
 | Bind Complete ('2') | (empty) |
@@ -1468,13 +1469,19 @@ Data Collector component ClientServerMessages (table V_INTERNAL.dc_client_server
 | Portal Suspended ('s') | (empty) |
 | Parameter Description ('t') | (empty) |
 | No Data ('n') | (empty) |
-| Load Balance Response('Y'/'N') |"load balance reponse" [yes/no] |
-| Parameter Status ('S') |parameter name:parameter value |
+| Load Balance Response('Y'/'N') |"load balance response" [yes/no] |
+| Parameter Status ('S') |parameter name: parameter value |
 | Command Complete ('C') |tag 
 
 ### Setup and Usage
 
-This DC Table is turned on by default. As with other session DC tables, this table contains columns for 'time', 'node_name', 'session_id', 'user_id', and 'user_name'. The unique columns for this DC table are 'source', 'message_type', and 'contents'. The 'source' column describes whether the messages is a Frontend (FE) or Backend (BE) message. 'message_type' provides the character ID that distinguishes the type of message. Additionally, verbose messages will have a "+" appended to the single character message_type column. For example, the StartupRequest message KV pairs each are represented as a row in the table with the message_type "^+". The 'contents' column lists the set of contents being logged, if any, for that message type.
+This DC Table is turned on by default. As with other session DC tables, this table contains columns for 'time', 'node_name', 'session_id', 'user_id', and 'user_name'. The unique columns for this DC table are 'source', 'message_type', and 'contents'. 
+
+- The 'source' column describes whether the messages is a Frontend (FE) or Backend (BE) message.
+
+- The 'message_type' column provides the character ID that distinguishes the type of message. Additionally, verbose messages will have a "+" appended to the single character message_type column. For example, the StartupRequest message KV pairs each are represented as a row in the table with the message_type "^+". 
+
+- The 'contents' column lists the set of contents being logged, if any, for that message type.
 
 #### Sample Query
 ```sql
@@ -1486,7 +1493,7 @@ This DC Table is turned on by default. As with other session DC tables, this tab
 => SELECT clear_data_collector('ClientServerMessages');
 ```
 
-Support since Server v12.0SP3
+*Support since Server v12.0SP3*
 
 ## Summary of Changes since Protocol 3.0
 
