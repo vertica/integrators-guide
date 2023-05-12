@@ -297,15 +297,15 @@ To begin a session, a frontend opens a connection over TCP/IP to the server. Wit
 
 #### Connection load balancing
   
-A backend with load balancing enabled can redirect connections based on the connection's origin. To initiate a connection load balancing, the frontend sends a [LoadBalanceRequest](#loadbalancerequest) message. The server then responds with a [LoadBalanceResponse](#loadbalanceresponse-yn) message, the first byte of the message containing ***Y***or***N***, indicating that it is willing or unwilling to perform load balancing, respectively. To continue after***Y***, the frontend must create a new TCP socket, which connects to the new host/port specified in the [LoadBalanceResponse 'Y'](#loadbalanceresponse-yn) message. To continue after***N***, send the usual [SSLRequest](#sslrequest-8) message and [Startup](#startuprequest) message and proceed without connection load balancing.
+A backend with load balancing enabled can redirect connections based on the connection's origin. To initiate a connection load balancing, the frontend sends a [LoadBalanceRequest](#loadbalancerequest) message. The server then responds with a [LoadBalanceResponse](#loadbalanceresponse-yn) message, the first byte of the message containing ***Y*** or ***N***, indicating that it is willing or unwilling to perform load balancing, respectively. To continue after ***Y***, the frontend must create a new TCP socket, which connects to the new host/port specified in the [LoadBalanceResponse 'Y'](#loadbalanceresponse-yn) message. To continue  ***N***, send the usual [SSLRequest](#sslrequest) message and [Startup](#startuprequest) message and proceed without connection load balancing.
   
 To enable connection load balancing on the server side, please see Vertica documentation.
 
 #### SSL session encryption
 
-Frontend/backend communications can be encrypted using SSL. This provides communication security in environments where attackers might be able to capture the session traffic.
+Frontend/backend communications can be encrypted using TLS/SSL. This provides communication security in environments where attackers might be able to capture the session traffic.
   
-To initiate an SSL-encrypted connection, the frontend sends an [SSLRequest](#sslrequest-8) message. The server then responds with a single byte containing ***S***or***N***, indicating that it is willing or unwilling to perform SSL, respectively. The frontend might close the connection at this point if it is dissatisfied with the response. To continue after***S***, perform an SSL startup handshake (not described here, part of the SSL specification) with the server. If this is successful, all subsequent data will be SSL-encrypted. To continue after***N***, send the usual [Startup](#startuprequest) message and proceed without encryption.
+To initiate an SSL-encrypted connection, the frontend sends an [SSLRequest](#sslrequest) message. The server then responds with a single byte containing ***S*** or ***N***, indicating that it is willing or unwilling to perform SSL, respectively. The frontend might close the connection at this point if it is dissatisfied with the response. To continue after ***S***, perform an SSL startup handshake (not described here, part of the SSL specification) with the server. If this is successful, all subsequent data will be SSL-encrypted. To continue after ***N***, send the usual [Startup](#startuprequest) message and proceed without encryption.
 
 To enable TLS/SSL communications on the server side, please see Vertica documentation.
 
@@ -350,7 +350,7 @@ If the frontend does not support the authentication method requested by the serv
 
 After having received AuthenticationOk, the frontend must wait for further messages from the server. In this phase a backend process is being started, and the frontend is just an interested bystander. It is still possible for the start-up attempt to fail (ErrorResponse), but in the normal case the backend will send some [ParameterStatus](#parameterstatus-s) messages, [BackendKeyData](#backendkeydata-k), and finally [ReadyForQuery](#readyforquery-z).
 
-During this phase the backend will attempt to apply any additional run-time parameter settings that were given in the Startup message. If successful, these values become session defaults. An error causes ErrorResponse and exit.
+During this phase the backend will attempt to apply any additional run-time parameter settings that were given in the [StartupRequest](#startuprequest) message. If successful, these values become session defaults. An error causes [ErrorResponse](#errorresponse-e) and exit.
 
 The possible messages from the backend in this phase are:
 
@@ -358,7 +358,7 @@ The possible messages from the backend in this phase are:
 : This message informs the frontend about the current (initial) setting of backend parameters, such as client_locale or auto_commit. The frontend can ignore this message, or record the settings for its future use. The frontend should not respond to this message, but should continue listening for a ReadyForQuery message.
 
 [BackendKeyData](#backendkeydata-k)
-: This message provides secret-key data that the frontend must save if it wants to be able to issue cancel requests later. The frontend should not respond to this message, but should continue listening for a ReadyForQuery message.
+: This message provides secret-key data that the frontend must save if it wants to be able to [issue cancel requests](#canceling-requests-in-progress) later. The frontend should not respond to this message, but should continue listening for a ReadyForQuery message.
 
 [ReadyForQuery](#readyforquery-z)
 : Start-up is completed. The frontend can now issue commands.
@@ -369,7 +369,7 @@ The possible messages from the backend in this phase are:
 [NoticeResponse](#noticeresponse-n)
 : A warning message has been issued. The frontend should display the message but continue listening for ReadyForQuery or ErrorResponse.
 
-The [ReadyForQuery](#readyforquery-z) message is the same one that the backend will issue after each command cycle. Depending on the coding needs of the frontend, it is reasonable to consider ReadyForQuery as starting a command cycle, or to consider ReadyForQuery as ending the start-up phase and each subsequent command cycle.
+The [ReadyForQuery](#readyforquery-z) message is the same one that the backend will issue after each command cycle. Depending on the coding needs of the frontend, it is reasonable to consider [ReadyForQuery](#readyforquery-z) as starting a command cycle, or to consider [ReadyForQuery](#readyforquery-z) as ending the start-up phase and each subsequent command cycle.
 
 ### Authentication
 
@@ -789,7 +789,7 @@ This section describes the detailed format of each message. Each message is clas
 | Int32      | Length of message contents in bytes, including self. |
 | String     | The query string itself.                             |
 
-#### SSLRequest '8'
+#### SSLRequest
 
 | Type       | Description |
 |:-----------|:------------|
@@ -1079,7 +1079,7 @@ Currently recognized values for protocol_compat are "PG" or "VER" for Postgres a
 |:-----------|:------------|
 | Byte1('R') | Identifies the message as an authentication request.                                              |
 | Int32(32)  | Length of message contents in bytes, including self.                                              |
-| Int32(5)   | Specifies that an MD5-encrypted password is required. password = MD5(MD5(password + user) + salt) |
+| Int32(5)   | Specifies that an MD5-encrypted password is required.<br>*password* = MD5(MD5(password + user) + salt) |
 | Byte4      | The salt to use when encrypting the password.                                                     |
 | Int32      | The user salt length, must equal to 16.                                                           |
 | Byte16     | The user salt, but not used.                                                                      |
@@ -1140,7 +1140,7 @@ Currently recognized values for protocol_compat are "PG" or "VER" for Postgres a
 |:-----------|:------------|
 | Byte1('R')   | Identifies the message as an authentication request.                                                |
 | Int32(32)    | Length of message contents in bytes, including self.                                                |
-| Int32(65536) | Specifies that a hashed password is required. password = SHA512(SHA512(password + userSalt) + salt) |
+| Int32(65536) | Specifies that a hashed password is required.<br>*password* = SHA512(SHA512(password + userSalt) + salt) |
 | Byte4        | The salt to use when encrypting the password.                                                       |
 | Int32        | The user salt length, must equal to 16.                                                             |
 | Byte16       | The user salt.                                                                                      |
@@ -1151,7 +1151,7 @@ Currently recognized values for protocol_compat are "PG" or "VER" for Postgres a
 |:-----------|:------------|
 | Byte1('R')   | Identifies the message as an authentication request.                                                    |
 | Int32(32)    | Length of message contents in bytes, including self.                                                    |
-| Int32(65541) | Specifies that a hashed MD5-encrypted password is required. password = MD5(MD5(password + user) + salt) |
+| Int32(65541) | Specifies that a hashed MD5-encrypted password is required.<br>*password* = MD5(MD5(password + user) + salt) |
 | Byte4        | The salt to use when encrypting the password.                                                           |
 | Int32        | The user salt length, must equal to 16.                                                                 |
 | Byte16       | The user salt, but not used.                                                                            |
@@ -1162,7 +1162,7 @@ Currently recognized values for protocol_compat are "PG" or "VER" for Postgres a
 |:-----------|:------------|
 | Byte1('R')   | Identifies the message as an authentication request.                                                                 |
 | Int32(32)    | Length of message contents in bytes, including self.                                                                 |
-| Int32(66048) | Specifies that a hashed SHA512-encrypted password is required. password = SHA512(SHA512(password + userSalt) + salt) |
+| Int32(66048) | Specifies that a hashed SHA512-encrypted password is required.<br>*password* = SHA512(SHA512(password + userSalt) + salt) |
 | Byte4        | The salt to use when encrypting the password.                                                                        |
 | Int32        | The user salt length, must equal to 16.                                                                              |
 | Byte16       | The user salt.                                                                                                       |
