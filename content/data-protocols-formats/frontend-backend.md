@@ -702,7 +702,7 @@ This section describes the detailed format of each message. Each message is clas
 
 | Type       | Description |
 |:-----------|:------------|
-| Byte1('c') | Identifies the message as a COPY-complete indicator. Note: This is different from a [CopyDoneResponse](#copydoneresponse-c) backend message. |
+| Byte1('c') | Identifies the message as a COPY-complete indicator.<br>Note: This is different from a [CopyDoneResponse](#copydoneresponse-c) backend message. |
 | Int32(4)   | Length of message contents in bytes, including self. |
 
 #### CopyError 'e'
@@ -746,7 +746,7 @@ This section describes the detailed format of each message. Each message is clas
 | Byte1('E') | Identifies the message as an Execute command.  |
 | Int32      | Length of message contents in bytes, including self.  |
 | String     | The name of the portal to execute (an empty string selects the unnamed portal). |
-| Int32      | Maximum number of rows to return, if portal contains a query that returns rows (ignored otherwise). Zero denotes "no limit". ***Note***: Currently, Vertica backend will ignore this result-row count and send all the rows regardless of what you put here. |
+| Int32      | Maximum number of rows to return, if portal contains a query that returns rows (ignored otherwise). Zero denotes "no limit".<br>***Note***: Currently, Vertica backend will ignore this result-row count and send all the rows regardless of what you put here. |
 
 #### Flush 'H'
 
@@ -790,7 +790,7 @@ This section describes the detailed format of each message. Each message is clas
 |:-----------|:------------|
 | Byte1('p') | Identifies the message as a password. |
 | Int32      | Length of message contents in bytes, including self. |
-| String     | The password (encrypted, if requested). All password strings processed by Vertica require a null terminator, as is standard with any string in the Front End / Back End protocol. GSS is special because Vertica doesn't touch the buffer it gets -- it defers to the GSS library instead. It is an error to send an extra null terminator in a GSS token message. |
+| String     | The password (encrypted, if requested). All password strings processed by Vertica require a null terminator, as is standard with any string in the Front End / Back End protocol.<br>GSS is special because Vertica doesn't touch the buffer it gets -- it defers to the GSS library instead. It is an error to send an extra null terminator in a GSS token message. |
 
 #### Query 'Q'
 
@@ -1143,7 +1143,7 @@ Currently recognized values for protocol_compat are "PG" or "VER" for Postgres a
 |:-----------|:------------|
 | Byte1('R') | Identifies the message as an authentication request. |
 | Int32(8)   | Length of message contents in bytes, including self. |
-| Int32(11)  | Specifies that an OAuth access token is required.    |
+| Int32(12)  | Specifies that an OAuth access token is required.    |
 
 #### AuthenticationHashPassword 'R'
 
@@ -1223,7 +1223,7 @@ Currently recognized values for protocol_compat are "PG" or "VER" for Postgres a
 
 | Type       | Description |
 |:-----------|:------------|
-| Byte1('c') | Identifies the message as a Copy done response for "COPY FROM LOCAL FILES" command. Note: This is different from a [CopyDone](#copydone-c) frontend message. |
+| Byte1('c') | Identifies the message as a Copy done response for "COPY FROM LOCAL FILES" command.<br>Note: This is different from a [CopyDone](#copydone-c) frontend message. |
 | Int32(4)   | Length of message contents in bytes, including self. |
 
 #### CopyInResponse 'G'
@@ -1275,16 +1275,16 @@ Currently recognized values for protocol_compat are "PG" or "VER" for Postgres a
 
 | Type       | Description |
 |:-----------|:------------|
-| Byte1('N') | Identifies the message as a LoadBalance response. The backend <u>rejects</u> the frontend LoadBalance request. Note: This is different from a [NoticeResponse 'N'](#noticeresponse-n) message. |
+| Byte1('N') | Identifies the message as a LoadBalance response. The backend <u>rejects</u> the frontend LoadBalance request.<br>Note: This is different from a [NoticeResponse 'N'](#noticeresponse-n) message. |
 
 or
 
-|            |                                                                                                                |
-|------------|----------------------------------------------------------------------------------------------------------------|
+| Type       | Description |
+|:-----------|:------------|
 | Byte1('Y') | Identifies the message as a LoadBalance response. The backend <u>accepts</u> the frontend LoadBalance request. |
-| Int32      | Length of message contents in bytes, including self.                                                           |
-| Int32      | The port number of the load balance target.                                                                    |
-| String     | The host of the load balance target. The string is null terminated. This is a ip address, not a DNS name       |
+| Int32      | Length of message contents in bytes, including self. |
+| Int32      | The port number of the load balance target. |
+| String     | The host of the load balance target. The string is null terminated. This is an IP address, not a DNS name. |
 
 #### LoadFile 'H'
 
@@ -1381,13 +1381,13 @@ or
 | Int32 | The number of elements in the type mapping pool, which is an array. This pool is used for non-native types like GEOMETRY and GEOGRAPHY (They are backed by LONG VARBINARY native type). |
 | Then, for each type mapping element in the pool, there is the following: |  |
 | Int32 | Specifies the base object ID of the non-native data type. |
-| String | Specifies the base object ID of the non-native data type. |
+| String | Specifies the name of the non-native data type. |
 | Then, for each field in a row, there is the following: |  |
 | String | The field name. |
 | Int64 | If the field can be identified as a column of a specific table, the object ID of the table; otherwise zero. (denoted <strong><em>OID</em></strong> below). |
 | String | The schema name. Only sent if <strong><em>OID</em></strong> != 0. |
 | String | The table name. Only sent if <strong><em>OID</em></strong> != 0. |
-| Int16 | If the field can be identified as a column of a specific table, the attribute number of the column; otherwise zero. The <st<strong><em>and the</em></strong>attribute number</em></strong> uniquely identify each field within the scope of a RowDescription message. |
+| Int16 | If the field can be identified as a column of a specific table, the attribute number of the column; otherwise zero. The <strong><em>OID</em></strong> and the <strong><em>attribute number</em></strong> uniquely identify each field within the scope of a RowDescription message. |
 | Int16 | If the column is a complex type, the <strong><em>attribute number</em></strong> of the field that is considered to be the parent; otherwise zero.<br>For example, an <em>ARRAY[INT]</em> will have one attribute number representing the ARRAY, and another attribute number representing the INT it contains. The INT will have a Parent that refers to the ARRAY.<br><em>New in version 3.10</em>: Before version 3.10, it only returned fields that did not have a parent. |
 | Byte1 | '1' if the column uses the type mapping pool; '0' otherwise. |
 | Int32 | If the column uses the type mapping pool, specifies the position (0-indexed) in the type mapping pool. Otherwise, specifies the object ID of the column's data type. |
@@ -1403,7 +1403,7 @@ or
 
 | Type       | Description |
 |:-----------|:------------|
-| Byte1('F') | Identifies the message as a response to COPY FROM LOCAL command. The backend parses the file names out of the command, and sends them back to the frontend in this message. The frontend has to verify that these files exist and are readable before running the copy |
+| Byte1('F') | Identifies the message as a response to COPY FROM LOCAL command. The backend parses the file names out of the command, and sends them back to the frontend in this message. The frontend has to verify that these files exist and are readable before running the copy. |
 | Int32      | Length of message contents in bytes, including self. |
 | Int16      | The number of files (denoted ***N*** below). 0 if copy input is STDIN. |
 | String\[***N***\] | The name of each data file to load.  |
@@ -1426,8 +1426,8 @@ This section describes the fields that may appear in [ErrorResponse](#errorrespo
 
 | Identification token | Description  |
 |:---------------------|:------------|
-| C                    | Code: the SQLSTATE code for the error. |
-| D                    | Detail  |
+| C                    | Code: the five-character SQLSTATE code for the error. See the "SQL state list" in Vertica Documentation for a list of all the SQLSTATE classes and values defined by Vertica. |
+| D                    | Detail: additional information about the error message, in greater detail.  |
 | F                    | File: the file name of the source-code location where the error was reported.  |
 | H                    | Hint: an optional suggestion what to do about the problem. This is intended to differ from Detail in that it offers advice (potentially inappropriate) rather than hard facts. Might run to multiple lines. |
 | L                    | Line: the line number of the source-code location where the error was reported.  |
@@ -1437,7 +1437,7 @@ This section describes the fields that may appear in [ErrorResponse](#errorrespo
 | q                    | Internal query  |
 | R                    | Routine: the name of the source-code routine reporting the error. |
 | S                    | Severity: the field contents are ERROR, FATAL, or PANIC (in an error message), or WARNING, NOTICE, DEBUG, INFO, or LOG (in a notice message), or a localized translation of one of these. Always present.   |
-| V                    | Error code |
+| V                    | Error code: the numeric error code that Vertica reports. |
 | W                    | Where: an indication of the context in which the error occurred. |
 
 
