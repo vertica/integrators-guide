@@ -1477,7 +1477,7 @@ Data Collector component ClientServerMessages (table `V_INTERNAL.dc_client_serve
 | No Data ('n') | (empty) |
 | Load Balance Response('Y'/'N') |"load balance response" [yes/no] |
 | Parameter Status ('S') |parameter name: parameter value |
-| Command Complete ('C') |tag 
+| Command Complete ('C') |tag |
 
 ### Setup and Usage
 
