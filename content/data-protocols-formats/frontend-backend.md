@@ -466,13 +466,13 @@ The possible response messages from the backend are:
   : An SQL command completed normally.
 
 - [RowDescription](#rowdescription-t)
-  : Indicates that rows are about to be returned in response to a query. The contents of this message describe the column layout of the rows. This will be followed by a DataRow message for each row being returned to the frontend.
+  : Indicates that rows are about to be returned in response to a query. The contents of this message describe the column layout of the rows. This will be followed by a [DataRow](#datarow-d) message for each row being returned to the frontend.
 
 - [VerifyFiles](#verifyfiles-f)
-  : The backend starts processing a COPY LOCAL command; see Section [COPY Operations](#copy-operations) -- [Copy-Local mode](#copy-local-mode).
+  : The backend starts processing a `COPY LOCAL` command; see Section [COPY Operations](#copy-operations) -- [Copy-Local mode](#copy-local-mode).
 
 - [CopyInResponse](#copyinresponse-g)
-  : The backend starts processing a COPY STDIN command; see Section [COPY Operations](#copy-operations) -- [Copy-Stdin mode](#copy-stdin-mode)
+  : The backend starts processing a `COPY STDIN` command; see Section [COPY Operations](#copy-operations) -- [Copy-Stdin mode](#copy-stdin-mode)
 
 - [DataRow](#datarow-d)
   : One of the set of rows returned by a query.
@@ -481,10 +481,10 @@ The possible response messages from the backend are:
   : An empty query string was recognized.
 
 - [ParameterStatus](#parameterstatus-s)
-  : This message informs the frontend about the current setting of backend parameters, a SET query normally produce this message.
+  : This message informs the frontend about the current setting of backend parameters, a `SET` query normally produce this message.
 
 - [NoticeResponse](#noticeresponse-n)
-  : A warning message has been issued in relation to the query. For example, issue a COMMIT when no transaction in progress. NoticeResponses are in addition to other responses, i.e., the backend will continue processing the command.
+  : A warning message has been issued in relation to the query. For example, issue a `COMMIT` when no transaction in progress. NoticeResponses are in addition to other responses, i.e., the backend will continue processing the command.
 
 - [ErrorResponse](#errorresponse-e)
   : An error has occurred.
@@ -492,7 +492,7 @@ The possible response messages from the backend are:
 - [ReadyForQuery](#readyforquery-z)
   : Processing of the query string is complete. A separate message is sent to indicate this because the query string might contain multiple SQL commands. ([CommandComplete](#commandcomplete-c) marks the end of processing **one** SQL command, not the whole string.) ReadyForQuery will always be sent, whether processing terminates successfully or with an error.
 
-The response to a SELECT query (or other queries that return row sets, such as EXPLAIN or SHOW) normally consists of [RowDescription](#rowdescription-t), zero or more [DataRow](#datarow-d) messages, and then [CommandComplete](#commandcomplete-c). COPY command invokes special protocol as described in Section [COPY Operations](#copy-operations). Other query types normally produce only a [CommandComplete](#commandcomplete-c) message.
+The response to a `SELECT` query (or other queries that return row sets, such as `EXPLAIN` or `SHOW`) normally consists of [RowDescription](#rowdescription-t), zero or more [DataRow](#datarow-d) messages, and then [CommandComplete](#commandcomplete-c). `COPY` command invokes special protocol as described in Section [COPY Operations](#copy-operations). Other query types normally produce only a [CommandComplete](#commandcomplete-c) message.
 
 Since a query string could contain several queries (separated by semicolons), there might be several such response sequences before the backend finishes processing the query string. ReadyForQuery is issued when the entire string has been processed and the backend is ready to accept a new query string.
 
