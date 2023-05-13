@@ -430,16 +430,16 @@ The client application call the IDP token API to retrieve the following paramete
   <img src="/images/data-protocols-formats/frontent-backend/OAuth_Msg_flow.png"                                   
        title="Example message flow of OAuth authentication (Protocol 3.11)"
        width="400"
-       alt="Example message flow of OAuth access token refresh" />             
-  <figcaption aria-hidden="true">Example message flow of OAuth authentication (Protocol 3.11)</figcaption>                                              
+       alt="Example message flow of OAuth authentication" />
+  <figcaption aria-hidden="true">Example message flow of OAuth authentication (Protocol 3.11)</figcaption>
 </figure>
 
 <figure>
   <img src="/images/data-protocols-formats/frontent-backend/OAuth_refresh_Msg_flow.png"                                   
        title="Example message flow of OAuth access token refresh (Protocol 3.11)"
        width="400"
-       alt="Example message flow of OAuth access token refresh" />             
-  <figcaption aria-hidden="true">Example message flow of OAuth access token refresh (Protocol 3.11)</figcaption>                                              
+       alt="Example message flow of OAuth access token refresh" />
+  <figcaption aria-hidden="true">Example message flow of OAuth access token refresh (Protocol 3.11)</figcaption>
 </figure>
 
 
@@ -504,15 +504,20 @@ Recommended practice is to code frontends in a state-machine style that will acc
 
 ### Extended Query
 
-The extended query protocol breaks down the above-described simple query protocol into multiple steps. The overall execution cycle consists of a *parse* step, which creates a prepared statement from a textual query string; a *bind* step, which creates a portal given a prepared statement and values for any needed parameters; and an *execute* step that runs a portal's query. One of the advantages of extended query protocol is preventing SQL injection attacks.
+The extended query protocol breaks down the above-described simple query protocol into multiple steps. The overall execution cycle consists of a ***parse* step**, which creates a prepared statement from a textual query string; a ***bind* step**, which creates a portal given a prepared statement and values for any needed parameters; and an ***execute* step** that runs a portal's query. One of the advantages of extended query protocol is preventing SQL injection attacks.
 
-![Example message flow of extended query (Close message is not included)](/images/data-protocols-formats/frontent-backend/PreparedStatement_Msg_flow.png)
+<figure>
+  <img src="/images/data-protocols-formats/frontent-backend/PreparedStatement_Msg_flow.png"                                   
+       title="Example message flow of extended query (Close message is not included)"
+       alt="Example message flow of extended query (Close message is not included)" />
+  <figcaption aria-hidden="true">Example message flow of extended query (Close message is not included)</figcaption>
+</figure>
 
 In the extended protocol, the frontend first sends a [Parse](#parse-p) message, which contains a textual query string. The query string leaves certain values (must be *SQL literals*; otherwise a syntax error is reported) unspecified with parameter placeholders (i.e. question mark '?'). The response is either [ParseComplete](#parsecomplete-1) or [ErrorResponse](#errorresponse-e).
 
-> **Note**: The query string contained in a [Parse](#parse-p) message cannot include more than one SQL statement; else a syntax error is reported. This restriction does not exist in the simple-query protocol.
+> **Note**: The query string contained in a [Parse](#parse-p) message cannot include more than one SQL statement; else a syntax error is reported. This restriction does not exist in the [simple-query protocol](#simple-query).
 > 
-> The query string contained in a [Parse](#parse-p) message cannot be a *COPY FROM LOCAL* SQL statement; else a protocol error is reported. See Section [Copy-Local mode](#copy-local-mode).
+> The query string contained in a [Parse](#parse-p) message cannot be a `COPY FROM LOCAL` SQL statement; else a protocol error is reported. See Section [Copy-Local mode](#copy-local-mode).
 
 If successfully created, a named prepared-statement object lasts till the end of the current session, unless explicitly destroyed. Within a session, the backend can keep track of multiple prepared statements. Existing prepared statements and portals are referenced by names assigned when they were created. The frontend can optimize its behavior when the same query string is used, but different parameters are bound to it (many times), i.e. *parse* once and then *bind* & *execute* many times.
 
