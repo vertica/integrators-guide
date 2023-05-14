@@ -595,7 +595,7 @@ There are several cases in which the backend will send messages that are not spe
 
 [ParameterStatus](#parameterstatus-s)
 : ParameterStatus messages will be generated whenever the active value changes for any of the parameters the backend believes the frontend should know about. For example, when you do `SET SESSION AUTOCOMMIT ON | OFF`, you get back a ParameterStatus telling you the new value of autocommit.
-: At present Vertica supports a handful of parameters for which ParameterStatus will be generated, they are: *standard_conforming_strings*, *server_version*, *client_locale*, *client_label*, *long_string_types*, *protocol_version*, *auto_commit*, *mars*, *database_name*, *request_complex_types*, etc.
+: At present Vertica supports a handful of parameters for which ParameterStatus will be generated, they are: *standard_conforming_strings*, *server_version*, *client_locale*, *client_label*, *long_string_types*, *protocol_version*, *auto_commit*, *mars*, *timezone*, *database_name*, *request_complex_types*, etc.
 : More parameters might be added in the future. A frontend should simply ignore ParameterStatus for parameters that it does not understand or care about.
 
 ### Canceling Requests in Progress
