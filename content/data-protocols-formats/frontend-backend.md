@@ -1501,6 +1501,22 @@ This DC Table is turned on by default. As with other session DC tables, this tab
 
 *Support since Server v12.0SP3*
 
+## Server Debug Logging
+ It is possible to enable the protocol debug log for the server. Execute the following SQL statement on the node to which the client connects:
+
+```sql
+=> SELECT set_debug_log('PROTOCOL','BASIC');
+```
+
+Now, the debug log messages in ***vertica.log*** can be filtered by the transaction ID.
+
+Then, execute the following SQL statement to disable the protocol debug log after executing the client program:
+
+```sql
+=> SELECT clear_debug_log('PROTOCOL','BASIC');
+```
+
+
 ## Summary of Changes since Protocol 3.0
 
 ### Protocol 3.14
