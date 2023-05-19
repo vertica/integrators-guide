@@ -27,7 +27,6 @@ Normal operation has additional sub-protocols for special operations such as COP
 
 All communication is through a stream of messages. The byte order of all messages are big-endian (A special case in [WriteFile](#writefile-o) message). All data sending to or coming from the backend are represented as UTF-8.
 
-<a id="formats-formatcodes"></a>
 ### Formats and Format Codes
 
 Data of a particular SQL data type might be transmitted in either "text" format or "binary" format. The desired format for any value is specified by a *format code*. Text has format code zero, binary has format code one, and all other format codes are reserved for future definition.
@@ -71,12 +70,13 @@ The text representation of values is whatever strings are produced and accepted 
          </td>
          <td>
             <p>A sequence of UTF-8 encoding bytes.</p>
-            <p>:* UTF-8 strings can contain multi-byte characters. Therefore, number
+            <ul>
+               <li> UTF-8 strings can contain multi-byte characters. Therefore, number
                of characters in the string may not equal the number of bytes.
-            </p>
-            <p>:* Strings shorter than the specified length are right-padded with
-               spaces.
-            </p>
+               </li>
+               <li> Strings shorter than the specified length are right-padded with spaces.
+               </li>
+            </ul>
          </td>
       </tr>
       <tr>
@@ -87,7 +87,7 @@ The text representation of values is whatever strings are produced and accepted 
             <p>Variable-length</p>
          </td>
          <td rowspan="2">
-            <p>A sequence of UTF-8 encoding bytes. Remember that UTF-8 strings
+            <p>A sequence of UTF-8 encoding bytes.<br>Remember that UTF-8 strings
                can contain multi-byte characters. Therefore, number of characters in
                the string may not equal the number of bytes.
             </p>
@@ -125,11 +125,11 @@ The text representation of values is whatever strings are produced and accepted 
             <p>NUMERIC</p>
          </td>
          <td>
-            <p>N (N = (precision//19+1)*8)</p>
+            <p><i>N</i> <small>(N = (precision//19+1)*8)</small></p>
          </td>
          <td>
-            <p>N-byte signed integer containing the unscaled value. Scale is
-               calculated separately with <a href="#rowdescription">RowDescription's</a> type modifier.
+            <p><i>N</i>-byte signed integer containing the unscaled value. Scale is
+               calculated separately with <a href="#rowdescription-t">RowDescription</a>'s type modifier.
             </p>
          </td>
       </tr>
@@ -200,7 +200,7 @@ The text representation of values is whatever strings are produced and accepted 
                   the UTC time zone.
                </li>
                <li>Lower 24 bits contain time zone as the UTC offset in seconds
-                  calculated as follows:<br>Actual time zone = 86400(24hrs) - this 3-byte value as integer
+                  calculated as follows:<br><i>Actual time zone</i> = 86400<small>(24hrs)</small> - this 3-byte value as integer
                </li>
             </ul>
          </td>
@@ -214,7 +214,7 @@ The text representation of values is whatever strings are produced and accepted 
          </td>
          <td>
             <p>64-bit integer containing the number of microseconds since Julian
-               day: Jan 01 2000 00:00:00.
+               day: <i>Jan 01 2000 00:00:00</i>.
             </p>
          </td>
       </tr>
@@ -227,7 +227,7 @@ The text representation of values is whatever strings are produced and accepted 
          </td>
          <td>
             <p>64-bit integer containing the number of microseconds since Julian
-               day: Jan 01 2000 00:00:00 in the UTC timezone.
+               day: <i>Jan 01 2000 00:00:00</i> in the UTC timezone.
             </p>
          </td>
       </tr>
@@ -285,7 +285,7 @@ The text representation of values is whatever strings are produced and accepted 
    </tbody>
 </table>
 
-> **Note**: While PostgreSQL lets you change the format on a per-column/type basis in the protocol, Vertica currently does not honor that and instead does it as a session-level setting. So unfortunately that means its an all-or-nothing implementation - all data types must be implemented. To opt into binary format protocol for data reads from backend (queries), the frontend have to set the [StartupRequest](#startuprequest) message to include parameter 'binary_data_protocol' set to '1' ('0' is the default, which is the string format protocol), and set the [Bind](#bind-b) message's last two fields (result-column format code) as '1'. No Vertica clients currently support data writes (server-prepared statement bind values) to the backend in binaryformat.
+> **Note**: While PostgreSQL lets you change the format on a per-column/type basis in the protocol, Vertica currently does not honor that and instead does it as a session-level setting. So unfortunately that means its an all-or-nothing implementation - all data types must be implemented. To opt into binary format protocol for data reads from backend (queries), the frontend have to set the [StartupRequest](#startuprequest) message to include parameter 'binary_data_protocol' set to '1' ('0' is the default, which is the text format protocol), and set the [Bind](#bind-b) message's last two fields (result-column format code) as '1'. No Vertica clients currently support data writes (server-prepared statement bind values) to the backend in binary format.
 
 ## Message Flow
 
@@ -297,15 +297,15 @@ To begin a session, a frontend opens a connection over TCP/IP to the server. Wit
 
 #### Connection load balancing
   
-A backend with load balancing enabled can redirect connections based on the connection's origin. To initiate a connection load balancing, the frontend sends a [LoadBalanceRequest](#loadbalancerequest) message. The server then responds with a [LoadBalanceResponse](#loadbalanceresponse-yn) message, the first byte of the message containing ***Y***or***N***, indicating that it is willing or unwilling to perform load balancing, respectively. To continue after***Y***, the frontend must create a new TCP socket, which connects to the new host/port specified in the [LoadBalanceResponse 'Y'](#loadbalanceresponse-yn) message. To continue after***N***, send the usual [SSLRequest](#sslrequest-8) message and [Startup](#startuprequest) message and proceed without connection load balancing.
+A backend with load balancing enabled can redirect connections based on the connection's origin. To initiate a connection load balancing, the frontend sends a [LoadBalanceRequest](#loadbalancerequest) message. The server then responds with a [LoadBalanceResponse](#loadbalanceresponse-yn) message, the first byte of the message containing ***Y*** or ***N***, indicating that it is willing or unwilling to perform load balancing, respectively. To continue after ***Y***, the frontend must create a new TCP socket, which connects to the new host/port specified in the [LoadBalanceResponse 'Y'](#loadbalanceresponse-yn) message. To continue  ***N***, send the usual [SSLRequest](#sslrequest) message and [Startup](#startuprequest) message and proceed without connection load balancing.
   
 To enable connection load balancing on the server side, please see Vertica documentation.
 
 #### SSL session encryption
 
-Frontend/backend communications can be encrypted using SSL. This provides communication security in environments where attackers might be able to capture the session traffic.
+Frontend/backend communications can be encrypted using TLS/SSL. This provides communication security in environments where attackers might be able to capture the session traffic.
   
-To initiate an SSL-encrypted connection, the frontend sends an [SSLRequest](#sslrequest-8) message. The server then responds with a single byte containing ***S***or***N***, indicating that it is willing or unwilling to perform SSL, respectively. The frontend might close the connection at this point if it is dissatisfied with the response. To continue after***S***, perform an SSL startup handshake (not described here, part of the SSL specification) with the server. If this is successful, all subsequent data will be SSL-encrypted. To continue after***N***, send the usual [Startup](#startuprequest) message and proceed without encryption.
+To initiate an SSL-encrypted connection, the frontend sends an [SSLRequest](#sslrequest) message. The server then responds with a single byte containing ***S*** or ***N***, indicating that it is willing or unwilling to perform SSL, respectively. The frontend might close the connection at this point if it is dissatisfied with the response. To continue after ***S***, perform an SSL startup handshake (not described here, part of the SSL specification) with the server. If this is successful, all subsequent data will be SSL-encrypted. To continue after ***N***, send the usual [Startup](#startuprequest) message and proceed without encryption.
 
 To enable TLS/SSL communications on the server side, please see Vertica documentation.
 
@@ -350,7 +350,7 @@ If the frontend does not support the authentication method requested by the serv
 
 After having received AuthenticationOk, the frontend must wait for further messages from the server. In this phase a backend process is being started, and the frontend is just an interested bystander. It is still possible for the start-up attempt to fail (ErrorResponse), but in the normal case the backend will send some [ParameterStatus](#parameterstatus-s) messages, [BackendKeyData](#backendkeydata-k), and finally [ReadyForQuery](#readyforquery-z).
 
-During this phase the backend will attempt to apply any additional run-time parameter settings that were given in the Startup message. If successful, these values become session defaults. An error causes ErrorResponse and exit.
+During this phase the backend will attempt to apply any additional run-time parameter settings that were given in the [StartupRequest](#startuprequest) message. If successful, these values become session defaults. An error causes [ErrorResponse](#errorresponse-e) and exit.
 
 The possible messages from the backend in this phase are:
 
@@ -358,7 +358,7 @@ The possible messages from the backend in this phase are:
 : This message informs the frontend about the current (initial) setting of backend parameters, such as client_locale or auto_commit. The frontend can ignore this message, or record the settings for its future use. The frontend should not respond to this message, but should continue listening for a ReadyForQuery message.
 
 [BackendKeyData](#backendkeydata-k)
-: This message provides secret-key data that the frontend must save if it wants to be able to issue cancel requests later. The frontend should not respond to this message, but should continue listening for a ReadyForQuery message.
+: This message provides secret-key data that the frontend must save if it wants to be able to [issue cancel requests](#canceling-requests-in-progress) later. The frontend should not respond to this message, but should continue listening for a ReadyForQuery message.
 
 [ReadyForQuery](#readyforquery-z)
 : Start-up is completed. The frontend can now issue commands.
@@ -369,7 +369,7 @@ The possible messages from the backend in this phase are:
 [NoticeResponse](#noticeresponse-n)
 : A warning message has been issued. The frontend should display the message but continue listening for ReadyForQuery or ErrorResponse.
 
-The [ReadyForQuery](#readyforquery-z) message is the same one that the backend will issue after each command cycle. Depending on the coding needs of the frontend, it is reasonable to consider ReadyForQuery as starting a command cycle, or to consider ReadyForQuery as ending the start-up phase and each subsequent command cycle.
+The [ReadyForQuery](#readyforquery-z) message is the same one that the backend will issue after each command cycle. Depending on the coding needs of the frontend, it is reasonable to consider [ReadyForQuery](#readyforquery-z) as starting a command cycle, or to consider [ReadyForQuery](#readyforquery-z) as ending the start-up phase and each subsequent command cycle.
 
 ### Authentication
 
@@ -400,7 +400,7 @@ When the client requests access to a server, this is the process:
 8. The server grants access and sends a [AuthenticationOk](#authenticationok-r); or sends a [ErrorResponse](#errorresponse-e) to indicate failure.
 
 
-![Example message flow of GSS authentication](/images/data-protocols-formats/frontent-backend/GSSAuth_Msg_flow.png)
+![Example message flow of GSS authentication](/images/data-protocols-formats/frontent-backend/GSSAuth_Msg_flow.png "Example message flow of GSS authentication")
 
 #### OAuth2 authentication
 
@@ -408,13 +408,13 @@ OAuth lets client applications verify themselves to and receive an OAuth access 
 
 A client application should first configure the IDP and get the following parameters:
 
-- client_id: ID of the confidential client (application) registered in IDP. This is used by server to call introspection API to retrieve user grants; and used by client to retrieve tokens.
+- ***client_id***: ID of the confidential client (application) registered in IDP. This is used by server to call introspection API to retrieve user grants; and used by client to retrieve tokens.
 
-- client_secret: The secret of the confidential client (application) registered in IDP. This is used by server to call introspection API to retrieve user grants; and used by client to retrieve tokens.
+- ***client_secret***: The secret of the confidential client (application) registered in IDP. This is used by server to call introspection API to retrieve user grants; and used by client to retrieve tokens.
 
-- introspect_url: API used by server to introspect access token. This URL is exposed by IDP and must be accessible from server.
+- ***introspect_url***: API used by server to introspect access token. This URL is exposed by IDP and must be accessible from server.
 
-- token_url: API used by client to refresh the token. This URL is exposed by IDP and must be accessible from client.
+- ***token_url***: API used by client to refresh the token. This URL is exposed by IDP and must be accessible from client.
 
 ![Example message flow of OAuth authentication](/images/data-protocols-formats/frontent-backend/OAuth_Msg_flow.png)
 
@@ -422,24 +422,30 @@ Then in the server, create an OAuth authentication record with above parameters,
 
 The client application call the IDP token API to retrieve the following parameters:
 
-- access_token: Access tokens are the thing that applications use to make connection requests on behalf of a user.
+- ***access_token***: Access tokens are the thing that applications use to make connection requests on behalf of a user.
 
-- refresh_token: Refresh tokens are used to obtain a new access token.
+- ***refresh_token***: Refresh tokens are used to obtain a new access token.
 
+<figure>
+  <img src="/images/data-protocols-formats/frontent-backend/OAuth_Msg_flow.png"                                   
+       title="Example message flow of OAuth authentication (Protocol 3.11)"
+       width="400"
+       alt="Example message flow of OAuth authentication" />
+  <figcaption aria-hidden="true">Example message flow of OAuth authentication (Protocol 3.11)</figcaption>
+</figure>
 
-<figure>                                                               
+<figure>
   <img src="/images/data-protocols-formats/frontent-backend/OAuth_refresh_Msg_flow.png"                                   
-       title="Example message flow of OAuth access token refresh"
-       width="350"
-       alt="Example message flow of OAuth access token refresh" />             
-  <figcaption aria-hidden="true">Example message flow of OAuth access     
-  token refresh</figcaption>                                              
+       title="Example message flow of OAuth access token refresh (Protocol 3.11)"
+       width="400"
+       alt="Example message flow of OAuth access token refresh" />
+  <figcaption aria-hidden="true">Example message flow of OAuth access token refresh (Protocol 3.11)</figcaption>
 </figure>
 
 
 #### (Protocol 3.11)
 
-In the [StartupRequest](#startuprequest), only access_token is required to be specified in **oauth_access_token** parameter, no client id/secret is included in the request. The 'user' parameter is optional. The backend validates token using OAuth Introspect query. In case oauth_access_token is valid and permissions are sufficient, the backend sends [AuthenticationOk](#authenticationok-r), otherwise it responds with an [ErrorResponse](#errorresponse-e). Token refresh flow can be triggered by frontend after the token validation (if token introspection fails).
+In the [StartupRequest](#startuprequest), only access_token is required to be specified in **oauth_access_token** parameter, no client id/secret is included in the request. The 'user' parameter can be an empty string. The backend validates token using OAuth Introspect query. In case oauth_access_token is valid and permissions are sufficient, the backend sends [AuthenticationOk](#authenticationok-r), otherwise it responds with an [ErrorResponse](#errorresponse-e). Token refresh flow can be triggered by frontend after the token validation (if token introspection fails).
 
 #### (Protocol 3.12)
 
@@ -452,7 +458,7 @@ If 'auth_category' parameter is not set, the server still check for the token in
 A simple query cycle is initiated by the frontend sending a [Query](#query-q) message to the backend. The message includes an SQL command (or commands) expressed as a text string. The backend then sends one or more response messages depending on the contents of the query command string, and finally a [ReadyForQuery](#readyforquery-z) response message. ReadyForQuery informs the frontend that it can safely send a new command.
 
 
-![Example message flow of simple query with data rows returned](/images/data-protocols-formats/frontent-backend/SimpleQuery_Msg_flow.png)
+![Example message flow of simple query with data rows returned](/images/data-protocols-formats/frontent-backend/SimpleQuery_Msg_flow.png "Example message flow of simple query with data rows returned")
 
 The possible response messages from the backend are:
 
@@ -460,13 +466,13 @@ The possible response messages from the backend are:
   : An SQL command completed normally.
 
 - [RowDescription](#rowdescription-t)
-  : Indicates that rows are about to be returned in response to a query. The contents of this message describe the column layout of the rows. This will be followed by a DataRow message for each row being returned to the frontend.
+  : Indicates that rows are about to be returned in response to a query. The contents of this message describe the column layout of the rows. This will be followed by a [DataRow](#datarow-d) message for each row being returned to the frontend.
 
 - [VerifyFiles](#verifyfiles-f)
-  : The backend starts processing a COPY LOCAL command; see Section [COPY Operations](#copy-operations) -- [Copy-Local mode](#copy-local-mode).
+  : The backend starts processing a `COPY LOCAL` command; see Section [COPY Operations](#copy-operations) -- [Copy-Local mode](#copy-local-mode).
 
 - [CopyInResponse](#copyinresponse-g)
-  : The backend starts processing a COPY STDIN command; see Section [COPY Operations](#copy-operations) -- [Copy-Stdin mode](#copy-stdin-mode)
+  : The backend starts processing a `COPY STDIN` command; see Section [COPY Operations](#copy-operations) -- [Copy-Stdin mode](#copy-stdin-mode)
 
 - [DataRow](#datarow-d)
   : One of the set of rows returned by a query.
@@ -475,10 +481,10 @@ The possible response messages from the backend are:
   : An empty query string was recognized.
 
 - [ParameterStatus](#parameterstatus-s)
-  : This message informs the frontend about the current setting of backend parameters, a SET query normally produce this message.
+  : This message informs the frontend about the current setting of backend parameters, a `SET` query normally produce this message.
 
 - [NoticeResponse](#noticeresponse-n)
-  : A warning message has been issued in relation to the query. For example, issue a COMMIT when no transaction in progress. NoticeResponses are in addition to other responses, i.e., the backend will continue processing the command.
+  : A warning message has been issued in relation to the query. For example, issue a `COMMIT` when no transaction in progress. NoticeResponses are in addition to other responses, i.e., the backend will continue processing the command.
 
 - [ErrorResponse](#errorresponse-e)
   : An error has occurred.
@@ -486,7 +492,7 @@ The possible response messages from the backend are:
 - [ReadyForQuery](#readyforquery-z)
   : Processing of the query string is complete. A separate message is sent to indicate this because the query string might contain multiple SQL commands. ([CommandComplete](#commandcomplete-c) marks the end of processing **one** SQL command, not the whole string.) ReadyForQuery will always be sent, whether processing terminates successfully or with an error.
 
-The response to a SELECT query (or other queries that return row sets, such as EXPLAIN or SHOW) normally consists of [RowDescription](#rowdescription-t), zero or more [DataRow](#datarow-d) messages, and then [CommandComplete](#commandcomplete-c). COPY command invokes special protocol as described in Section [COPY Operations](#copy-operations). Other query types normally produce only a [CommandComplete](#commandcomplete-c) message.
+The response to a `SELECT` query (or other queries that return row sets, such as `EXPLAIN` or `SHOW`) normally consists of [RowDescription](#rowdescription-t), zero or more [DataRow](#datarow-d) messages, and then [CommandComplete](#commandcomplete-c). `COPY` command invokes special protocol as described in Section [COPY Operations](#copy-operations). Other query types normally produce only a [CommandComplete](#commandcomplete-c) message.
 
 Since a query string could contain several queries (separated by semicolons), there might be several such response sequences before the backend finishes processing the query string. ReadyForQuery is issued when the entire string has been processed and the backend is ready to accept a new query string.
 
@@ -498,15 +504,20 @@ Recommended practice is to code frontends in a state-machine style that will acc
 
 ### Extended Query
 
-The extended query protocol breaks down the above-described simple query protocol into multiple steps. The overall execution cycle consists of a *parse* step, which creates a prepared statement from a textual query string; a *bind* step, which creates a portal given a prepared statement and values for any needed parameters; and an *execute* step that runs a portal's query. One of the advantages of extended query protocol is preventing SQL injection attacks.
+The extended query protocol breaks down the above-described simple query protocol into multiple steps. The overall execution cycle consists of a ***parse* step**, which creates a prepared statement from a textual query string; a ***bind* step**, which creates a portal given a prepared statement and values for any needed parameters; and an ***execute* step** that runs a portal's query. One of the advantages of extended query protocol is preventing SQL injection attacks.
 
-![Example message flow of extended query (Close message is not included)](/images/data-protocols-formats/frontent-backend/PreparedStatement_Msg_flow.png)
+<figure>
+  <img src="/images/data-protocols-formats/frontent-backend/PreparedStatement_Msg_flow.png"                                   
+       title="Example message flow of extended query (Close message is not included)"
+       alt="Example message flow of extended query (Close message is not included)" />
+  <figcaption aria-hidden="true">Example message flow of extended query (Close message is not included)</figcaption>
+</figure>
 
 In the extended protocol, the frontend first sends a [Parse](#parse-p) message, which contains a textual query string. The query string leaves certain values (must be *SQL literals*; otherwise a syntax error is reported) unspecified with parameter placeholders (i.e. question mark '?'). The response is either [ParseComplete](#parsecomplete-1) or [ErrorResponse](#errorresponse-e).
 
-> **Note**: The query string contained in a [Parse](#parse-p) message cannot include more than one SQL statement; else a syntax error is reported. This restriction does not exist in the simple-query protocol.
+> **Note**: The query string contained in a [Parse](#parse-p) message cannot include more than one SQL statement; else a syntax error is reported. This restriction does not exist in the [simple-query protocol](#simple-query).
 > 
-> The query string contained in a [Parse](#parse-p) message cannot be a *COPY FROM LOCAL* SQL statement; else a protocol error is reported. See Section [Copy-Local mode](#copy-local-mode).
+> The query string contained in a [Parse](#parse-p) message cannot be a `COPY FROM LOCAL` SQL statement; else a protocol error is reported. See Section [Copy-Local mode](#copy-local-mode).
 
 If successfully created, a named prepared-statement object lasts till the end of the current session, unless explicitly destroyed. Within a session, the backend can keep track of multiple prepared statements. Existing prepared statements and portals are referenced by names assigned when they were created. The frontend can optimize its behavior when the same query string is used, but different parameters are bound to it (many times), i.e. *parse* once and then *bind* & *execute* many times.
 
@@ -517,30 +528,30 @@ Once a prepared statement exists, it can be readied for execution using a [Bind]
 
 Once a portal exists, it can be executed using an [Execute](#execute-e) message. The [Execute](#execute-e) message specifies the portal name (empty string denotes the unnamed portal) and a maximum result-row count (Vertica backend ignores this and always fetch all rows). The possible responses to [Execute](#execute-e) are the same as those described above for queries issued via simple query protocol, except that Execute doesn't cause ReadyForQuery or RowDescription to be issued, also [PortalSuspended](#portalsuspended-s) replaced [CommandComplete](#commandcomplete-c) to indicate completion of the source SQL command.
 
-At completion of each series of extended-query messages, the frontend should issue a [Sync](#sync-s) message. This parameterless message causes the backend to close the current transaction if it's not inside a BEGIN/COMMIT transaction block ("close" meaning to commit if no error, or roll back if error). Then a ReadyForQuery response is issued. The purpose of [Sync](#sync-s) is to provide a resynchronization point for error recovery. When an error is detected while processing any extended-query message, the backend issues ErrorResponse, then reads and discards messages until a [Sync](#sync-s) is reached, then issues ReadyForQuery and returns to normal message processing. (But note that no skipping occurs if an error is detected while processing Sync — this ensures that there is one and only one ReadyForQuery sent for each Sync.)
+At completion of each series of extended-query messages, the frontend should issue a [Sync](#sync-s) message. This parameterless message causes the backend to close the current transaction if it's not inside a `BEGIN`/`COMMIT` transaction block ("close" meaning to commit if no error, or roll back if error). Then a ReadyForQuery response is issued. The purpose of [Sync](#sync-s) is to provide a resynchronization point for error recovery. When an error is detected while processing any extended-query message, the backend issues ErrorResponse, then reads and discards messages until a [Sync](#sync-s) is reached, then issues ReadyForQuery and returns to normal message processing. (But note that no skipping occurs if an error is detected while processing Sync — this ensures that there is one and only one ReadyForQuery sent for each Sync.)
 
-In most scenarios the frontend should issue a [Describe](#describe-d) before issuing [Execute](#execute-e), to ensure that it knows how to interpret the results it will get back. The [Describe](#describe-d) message (statement variant) specifies the name of an existing prepared statement. The response is a [ParameterDescription](#parameterdescription-t) message describing the parameters needed by the statement, followed by a [RowDescription](#rowdescription-t) message describing the rows that will be returned when the statement is eventually executed (or a [NoData](#nodata-n) message if the statement will not return rows), and followed by a [CommandDescription](#commanddescription-m) message describing the type of command to be executed and any semantically-equivalent COPY statement. ErrorResponse is issued if there is no such prepared statement. Note that since [Bind](#bind-b) has not yet been issued, the formats to be used for returned columns are not yet known to the backend; the format code fields in the [RowDescription](#rowdescription-t) message will be zeroes in this case. The [Describe](#describe-d) message (portal variant) specifies the name of an existing portal (or an empty string for the unnamed portal). The response is a [RowDescription](#rowdescription-t) message describing the rows that will be returned by executing the portal; or a [NoData](#nodata-n) message if the portal does not contain a query that will return rows; or ErrorResponse if there is no such portal.
+In most scenarios the frontend should issue a [Describe](#describe-d) before issuing [Execute](#execute-e), to ensure that it knows how to interpret the results it will get back. The [Describe](#describe-d) message (statement variant) specifies the name of an existing prepared statement. The response is a [ParameterDescription](#parameterdescription-t) message describing the parameters needed by the statement, followed by a [RowDescription](#rowdescription-t) message describing the rows that will be returned when the statement is eventually executed (or a [NoData](#nodata-n) message if the statement will not return rows), and followed by a [CommandDescription](#commanddescription-m) message describing the type of command to be executed and any semantically-equivalent COPY statement. [ErrorResponse](#errorresponse-e) is issued if there is no such prepared statement. Note that since [Bind](#bind-b) has not yet been issued, the formats to be used for returned columns are not yet known to the backend; the format code fields in the [RowDescription](#rowdescription-t) message will be zeroes in this case. The [Describe](#describe-d) message (portal variant) specifies the name of an existing portal (or an empty string for the unnamed portal). The response is a [RowDescription](#rowdescription-t) message describing the rows that will be returned by executing the portal; or a [NoData](#nodata-n) message if the portal does not contain a query that will return rows; or [ErrorResponse](#errorresponse-e) if there is no such portal.
 
-The [Close](#close-c) message closes an existing prepared statement or portal and releases resources. It is not an error to issue Close against a nonexistent statement or portal name. The response is normally [CloseComplete](#closecomplete-3), but could be ErrorResponse if some difficulty is encountered while releasing resources. Note that closing a prepared statement implicitly closes any open portals that were constructed from that statement.
+The [Close](#close-c) message closes an existing prepared statement or portal and releases resources. It is not an error to issue Close against a nonexistent statement or portal name. The response is normally [CloseComplete](#closecomplete-3), but could be [ErrorResponse](#errorresponse-e) if some difficulty is encountered while releasing resources. Note that closing a prepared statement implicitly closes any open portals that were constructed from that statement.
 
 The [Flush](#flush-h) message does not cause any specific output to be generated, but forces the backend to deliver any data pending in its output buffers. A [Flush](#flush-h) must be sent after any extended-query command except [Sync](#sync-s), if the frontend wishes to examine the results of that command before issuing more commands. Without [Flush](#flush-h), messages returned by the backend will be combined into the minimum possible number of packets to minimize network overhead.
 
 ### COPY Operations
 
-The COPY command allows high-speed bulk data transfer from the client to the server. COPY operations can be divided into *copy-local* mode (it is further divided into *copy-local-stdin* mode and *copy-local-file* mode) and *copy-stdin* mode.
+The `COPY` command allows high-speed bulk data transfer from the client to the server. COPY operations can be divided into [*copy-local* mode](#copy-local-mode) (it is further divided into *copy-local-stdin* mode and *copy-local-file* mode) and [*copy-stdin* mode](#copy-stdin-mode).
 
 #### Copy-Local mode
 
-Copy-local mode is initiated when the backend executes a *COPY FROM LOCAL FILES* or *COPY FROM LOCAL STDIN* SQL statement in [Query](#query-q) message. The backend sends a [RowDescription](#rowdescription-t) message (For the DataRow message later indicating the number of rows loaded.) and a [VerifyFiles](#verifyfiles-f) message to the frontend. The backend parses the file names out of the command, and sends them back to the frontend in [VerifyFiles](#verifyfiles-f) message. If COPY command uses the REJECTED DATA and/or EXCEPTIONS parameters, VerifyFiles message contains filenames for them. In *copy-local-file* mode, VerifyFiles message also contains input filenames. The frontend has to verify that these input files exist and are readable, and rejected data and exceptions files are writable.
+Copy-local mode is initiated when the backend executes a `COPY FROM LOCAL FILES` or `COPY FROM LOCAL STDIN` SQL statement in [Query](#query-q) message. The backend sends a [RowDescription](#rowdescription-t) message (For the [DataRow](#datarow-d) message later indicating the number of rows loaded) and a [VerifyFiles](#verifyfiles-f) message to the frontend. The backend parses the file names out of the command, and sends them back to the frontend in [VerifyFiles](#verifyfiles-f) message. If `COPY` command uses the `REJECTED DATA` and/or `EXCEPTIONS` parameters, VerifyFiles message contains filenames for them. In *copy-local-file* mode, VerifyFiles message also contains input filenames. The frontend has to verify that these input files exist and are readable, and rejected data and exceptions files are writable.
 
 Then the frontend should send a [VerifiedFile](#emptyqueryresponse-i) message specifying a list of input files that the backend can ask to load. In *copy-local-stdin* mode, this is an empty list. In *copy-local-file* mode, this must be a non-empty list, because sending an empty list of files will make server kill the session. If the backend does not send a ErrorResponse, it is ready to copy data from STDIN/files. The backend might send [ParameterStatus](#parameterstatus-s) messages, then
 
 - In *copy-local-file* mode, for each file to load, the backend sends a [LoadFile](#loadfile-h) message to ask for data from a file. The frontend should then send zero or more [CopyData](#copydata-d) messages, forming a stream of input data. The message boundaries are not required to have anything to do with row boundaries, although that is often a reasonable choice. The frontend should send a [EndOfBatchRequest](#endofbatchrequest-j) message to indicate that a batch of rows has been sent, and the frontend is expecting an acknowledgment and possibly rejected row descriptions from the backend. The backend should then send zero or more [WriteFile](#writefile-o) messages for rejected row descriptions and a [EndOfBatchResponse](#endofbatchresponse-j) message for acknowledgement of data loading from this file. When the backend finishes asking for data from all files, it sends a [CopyDoneResponse](#copydoneresponse-c) message.
 
-<figure>                                                               
- <img src="/images/data-protocols-formats/frontent-backend/CopyLocalFile_Msg_flow.png"                                   
+<figure>  
+ <img src="/images/data-protocols-formats/frontent-backend/CopyLocalFile_Msg_flow.png"
       title="Example message flow of COPY FROM LOCAL FILE"
-      width="400"
+      width="500"
       alt="Example message flow of COPY FROM LOCAL FILE" />                   
       <figcaption aria-hidden="true">Example message flow of COPY FROM LOCAL FILE</figcaption>
  </figure> 
@@ -548,32 +559,32 @@ Then the frontend should send a [VerifiedFile](#emptyqueryresponse-i) message sp
 - In *copy-local-stdin* mode, the backend sends a [CopyInResponse](#copyinresponse-g) message to the frontend to ask for data. Same as in *copy-local-file* mode, the frontend should send zero or more [CopyData](#copydata-d) messages, forming a stream of input data, and a [EndOfBatchRequest](#endofbatchrequest-j) message and then receive zero or more [WriteFile](#writefile-o) messages and an [EndOfBatchRequest](#endofbatchrequest-j) message. In this mode, there will be no incoming message until the frontend send a [CopyDone](#copydone-c) message to end this STDIN loading.
 
 <figure>
-  <img src="/images/data-protocols-formats/frontent-backend/CopyLocalStdin_Msg_flow.png"                                  
+  <img src="/images/data-protocols-formats/frontent-backend/CopyLocalStdin_Msg_flow.png"
        title="Example message flow of COPY FROM LOCAL STDIN"
-       width="350"
+       width="500"
        alt="Example message flow of COPY FROM LOCAL STDIN"
   />
-  <figcaption aria-hidden="true">Example message flow of COPY FROM LOCAL STDIN<figcaption>                                                      
+  <figcaption aria-hidden="true">Example message flow of COPY FROM LOCAL STDIN<figcaption>
 </figure>
 
 
-> **Security concerns**: The frontend must verify the file the backend asks for reading ([LoadFile](#loadfile-h)) or writing ([WriteFile](#writefile-o) is not tampered.
+> **Security concerns**: The frontend must verify the file the backend asks for reading ([LoadFile](#loadfile-h)) or writing ([WriteFile](#writefile-o)) is not tampered.
 
-After loading all the data, the backend sends a [DataRow](#datarow-d) message indicating the number of rows loaded, and then a [CommandComplete](#commandcomplete-c) message indicating the end of the COPY command. The query string might contain multiple SQL commands, the backend will return to the command-processing mode of [Simple Query protocol](#simple-query) when a COPY command ended. ReadyForQuery will always be sent when the query string is complete.
+After loading all the data, the backend sends a [DataRow](#datarow-d) message indicating the number of rows loaded, and then a [CommandComplete](#commandcomplete-c) message indicating the end of the `COPY` command. The query string might contain multiple SQL commands, the backend will return to the command-processing mode of [Simple Query protocol](#simple-query) when a `COPY` command ended. ReadyForQuery will always be sent when the query string is complete.
 
-In the event of a frontend-detected error during *copy-local* mode, the frontend can terminate it by sending a [CopyError](#copyerror-e) message, which will cause the COPY SQL statement to fail with an ErrorResponse. In the event of a backend-detected error (including receipt of a CopyError message), the backend will issue an ErrorResponse message, any subsequent messages issued by the frontend will simply be dropped, and ReadyForQuery is issued.
+In the event of a frontend-detected error during *copy-local* mode, the frontend can terminate it by sending a [CopyError](#copyerror-e) message, which will cause the `COPY` SQL statement to fail with an ErrorResponse. In the event of a backend-detected error (including receipt of a CopyError message), the backend will issue an ErrorResponse message, any subsequent messages issued by the frontend will simply be dropped, and ReadyForQuery is issued.
 
 #### Copy-Stdin mode
 
 This protocol comes from PostgreSQL and is (partially) supported in Vertica server but not implemented by most Vertica clients. The backend cannot report the number of rows loaded after copy, and possibly rejected row descriptions.
 
-Copy-stdin mode is initiated when the backend executes a *COPY FROM STDIN* SQL statement (not "COPY FROM LOCAL STDIN") in a [Query](#query-q) message. The backend might send [ParameterStatus](#parameterstatus-s) messages, and then a [CopyInResponse](#copyinresponse-g) message to the frontend to ask for data. The frontend should send zero or more [CopyData](#copydata-d) messages, forming a stream of input data, and a [CopyDone](#copydone-c) message to end this STDIN loading. The backend should process the command and send a [CommandComplete](#commandcomplete-c) message indicating the end of the COPY command. The query string might contain multiple SQL commands, the backend will return to the command-processing mode of [Simple Query protocol](#simple-query) when a COPY command ended. ReadyForQuery will always be sent when the query string is complete.
+Copy-stdin mode is initiated when the backend executes a `COPY FROM STDIN` SQL statement (**not** "COPY FROM LOCAL STDIN") in a [Query](#query-q) message. The backend might send [ParameterStatus](#parameterstatus-s) messages, and then a [CopyInResponse](#copyinresponse-g) message to the frontend to ask for data. The frontend should send zero or more [CopyData](#copydata-d) messages, forming a stream of input data, and a [CopyDone](#copydone-c) message to end this STDIN loading. The backend should process the command and send a [CommandComplete](#commandcomplete-c) message indicating the end of the `COPY` command. The query string might contain multiple SQL commands, the backend will return to the command-processing mode of [Simple Query protocol](#simple-query) when a `COPY` command ended. ReadyForQuery will always be sent when the query string is complete.
 
-![Example message flow of COPY FROM STDIN](/images/data-protocols-formats/frontent-backend/CopyStdin_Msg_flow.png)
+![Example message flow of COPY FROM STDIN](/images/data-protocols-formats/frontent-backend/CopyStdin_Msg_flow.png "Example message flow of COPY FROM STDIN")
 
-In the event of a frontend-detected error during *copy-stdin* mode, the frontend can terminate it by sending a [CopyFail](#copyfail-f) or a [CopyError](#copyerror-e) message, which will cause the COPY SQL statement to fail with an ErrorResponse. In the event of a backend-detected error (including receipt of a CopyFail or a CopyError message), the backend will issue an ErrorResponse message, any subsequent CopyData, CopyDone, CopyFail or CopyError messages issued by the frontend will simply be dropped, and ReadyForQuery is issued.
+In the event of a frontend-detected error during *copy-stdin* mode, the frontend can terminate it by sending a [CopyFail](#copyfail-f) or a [CopyError](#copyerror-e) message, which will cause the `COPY` SQL statement to fail with an ErrorResponse. In the event of a backend-detected error (including receipt of a [CopyFail](#copyfail-f) or a [CopyError](#copyerror-e) message), the backend will issue an ErrorResponse message, any subsequent CopyData, CopyDone, CopyFail or CopyError messages issued by the frontend will simply be dropped, and ReadyForQuery is issued.
 
-Copy-stdin mode can also be initiated via [Extended Query protocol](#extended-query), the COPY command is issued in a [Parse](#parse-p) message. The workflow is the same as normal processing of [Extended Query protocol](#extended-query) except that the backend should send a [CopyInResponse](#copyinresponse-g) message after receiving an [Execute](#execute-e) message. Then the frontend should send zero or more [CopyData](#copydata-d) messages, forming a stream of input data, and a [CopyDone](#copydone-c) or [CopyFail](#copyfail-f)/[CopyError](#copyerror-e) message to end the STDIN loading.
+Copy-stdin mode can also be initiated via [Extended Query protocol](#extended-query), the `COPY` command is issued in a [Parse](#parse-p) message. The workflow is the same as normal processing of [Extended Query protocol](#extended-query) except that the backend should send a [CopyInResponse](#copyinresponse-g) message after receiving an [Execute](#execute-e) message. Then the frontend should send zero or more [CopyData](#copydata-d) messages, forming a stream of input data, and a [CopyDone](#copydone-c) or [CopyFail](#copyfail-f)/[CopyError](#copyerror-e) message to end the STDIN loading.
 
 ### Asynchronous Operations
 
@@ -584,14 +595,14 @@ There are several cases in which the backend will send messages that are not spe
 
 [ParameterStatus](#parameterstatus-s)
 : ParameterStatus messages will be generated whenever the active value changes for any of the parameters the backend believes the frontend should know about. For example, when you do `SET SESSION AUTOCOMMIT ON | OFF`, you get back a ParameterStatus telling you the new value of autocommit.
-: At present Vertica supports a handful of parameters for which ParameterStatus will be generated, they are: *standard_conforming_strings*, *server_version*, *client_locale*, *client_label*, *long_string_types*, *protocol_version*, *auto_commit*, *mars*, etc.
+: At present Vertica supports a handful of parameters for which ParameterStatus will be generated, they are: *standard_conforming_strings*, *server_version*, *client_locale*, *client_label*, *long_string_types*, *protocol_version*, *auto_commit*, *mars*, *timezone*, *database_name*, *request_complex_types*, etc.
 : More parameters might be added in the future. A frontend should simply ignore ParameterStatus for parameters that it does not understand or care about.
 
 ### Canceling Requests in Progress
 
 During the processing of a query, the frontend might request cancellation of the query. The cancel request is not sent directly on the open connection to the backend for reasons of implementation efficiency: we don't want to have the backend constantly checking for new input from the frontend during query processing. Cancel requests should be relatively infrequent, so we make them slightly cumbersome in order to avoid a penalty in the normal case.
 
-To issue a cancel request, the frontend opens a new connection to the server and sends a [CancelRequest](#cancelrequest) message, rather than the Startup message that would ordinarily be sent across a new connection. The server will process this request and then close the connection. For security reasons, no direct reply is made to the cancel request message.
+To issue a cancel request, the frontend opens a new connection to the server and sends a [CancelRequest](#cancelrequest) message, rather than the [StartupRequest](#startuprequest) message that would ordinarily be sent across a new connection. The server will process this request and then close the connection. For security reasons, no direct reply is made to the [CancelRequest](#cancelrequest) message.
 
 A [CancelRequest](#cancelrequest) message will be ignored unless it contains the same key data (PID and secret key) passed to the frontend during connection start-up. If the request matches the PID and secret key for a currently executing backend, the processing of the current query is aborted.
 
@@ -611,21 +622,21 @@ In rare cases (such as an administrator-commanded database shutdown) the backend
 
 This section describes the base data types used in messages.
 
-Int<i>n</i>(<i>i</i>)   
+Int<strong><i>n</i></strong>(<strong><i>i</i></strong>)
 : An <strong><i>n</i></strong>-bit integer in network byte order (most significant byte first). If <strong><i>i</i></strong> is specified it is the exact value that will appear, otherwise the value is variable. Eg. Int16, Int32(42).
 
-Int<i>n</i>\[<i>k</i>\]
+Int<strong><i>n</i></strong>[<strong><i>k</i></strong>]
 : An array of <strong><i>k</i></strong> <strong><i>n</i></strong>-bit integers, each in network byte order. The array length <strong><i>k</i></strong> is always determined by an earlier field in the message. Eg. Int16\[M\].
 
-String(<i>s</i>)
+String(<strong><i>s</i></strong>)
 : A null-terminated string (C-style string). There is no specific length limitation on strings. If <strong><i>s</i></strong> is specified it is the exact value that will appear, otherwise the value is variable. Eg. String, String("user").
 
-> Note: There is no predefined limit on the length of a string that can be returned by the backend. Good coding strategy for a frontend is to use an expandable buffer so that anything that fits in memory can be accepted. If that's not feasible, read the full string and discard trailing characters that don't fit into your fixed-size buffer.
+ > Note: There is no predefined limit on the length of a string that can be returned by the backend. Good coding strategy for a frontend is to use an expandable buffer so that anything that fits in memory can be accepted. If that's not feasible, read the full string and discard trailing characters that don't fit into your fixed-size buffer.
 
-String\[<i>k</i>\]
+String[<strong><i>k</i></strong>]
 : An array of <strong><i>k</i></strong> null-terminated strings (C-style strings). The array length <strong><i>k</i></strong> is always determined by an earlier field in the message. Eg. String\[N\]. 
 
-Byte<i>n</i>(<i>c</i>)
+Byte<strong><i>n</i></strong>(<strong><i>c</i></strong>)
 : Exactly <strong><i>n</i></strong> bytes. If the field width <strong><i>n</i></strong> is not a constant, it is always determinable from an earlier field in the message. If <strong><i>c</i></strong> is specified it is the exact value. Eg. Byte2, Byte1('\n').
 
 ## Message Formats
@@ -668,30 +679,30 @@ This section describes the detailed format of each message. Each message is clas
 |:-----------|:------------|
 | Byte1('n') | Identifies the message as a ChangePassword command.  |
 | Int32      | Length of message contents in bytes, including self. |
-| String     | The new password.                                    |
+| String     | The new password. |
 
 #### Close 'C'
 
 | Type       | Description |
 |:-----------|:------------|
-| Byte1('C') | Identifies the message as a Close command.                                                                                |
-| Int32      | Length of message contents in bytes, including self.                                                                      |
-| Byte1      | 'S' to close a prepared statement; or 'P' to close a portal.                                                              |
+| Byte1('C') | Identifies the message as a Close command. |
+| Int32      | Length of message contents in bytes, including self. |
+| Byte1      | 'S' to close a prepared statement; or 'P' to close a portal. |
 | String     | The name of the prepared statement or portal to close (an empty string selects the unnamed prepared statement or portal). |
 
 #### CopyData 'd'
 
 | Type       | Description |
 |:-----------|:------------|
-| Byte1('d')  | Identifies the message as COPY data.                                                                           |
-| Int32       | Length of message contents in bytes, including self.                                                           |
+| Byte1('d')  | Identifies the message as COPY data. |
+| Int32       | Length of message contents in bytes, including self. |
 | Byte***n*** | Data that forms part of a COPY data stream. Messages sent by frontends may divide the data stream arbitrarily. |
 
 #### CopyDone 'c'
 
 | Type       | Description |
 |:-----------|:------------|
-| Byte1('c') | Identifies the message as a COPY-complete indicator. Note: This is different from a [CopyDoneResponse](#copydoneresponse-c) backend message. |
+| Byte1('c') | Identifies the message as a COPY-complete indicator.<br>Note: This is different from a [CopyDoneResponse](#copydoneresponse-c) backend message. |
 | Int32(4)   | Length of message contents in bytes, including self. |
 
 #### CopyError 'e'
@@ -735,7 +746,7 @@ This section describes the detailed format of each message. Each message is clas
 | Byte1('E') | Identifies the message as an Execute command.  |
 | Int32      | Length of message contents in bytes, including self.  |
 | String     | The name of the portal to execute (an empty string selects the unnamed portal). |
-| Int32      | Maximum number of rows to return, if portal contains a query that returns rows (ignored otherwise). Zero denotes "no limit". ***Note***: Currently, Vertica backend will ignore this result-row count and send all the rows regardless of what you put here. |
+| Int32      | Maximum number of rows to return, if portal contains a query that returns rows (ignored otherwise). Zero denotes "no limit".<br>***Note***: Currently, Vertica backend will ignore this result-row count and send all the rows regardless of what you put here. |
 
 #### Flush 'H'
 
@@ -779,7 +790,7 @@ This section describes the detailed format of each message. Each message is clas
 |:-----------|:------------|
 | Byte1('p') | Identifies the message as a password. |
 | Int32      | Length of message contents in bytes, including self. |
-| String     | The password (encrypted, if requested). All password strings processed by Vertica require a null terminator, as is standard with any string in the Front End / Back End protocol. GSS is special because Vertica doesn't touch the buffer it gets -- it defers to the GSS library instead. It is an error to send an extra null terminator in a GSS token message. |
+| String     | The password (encrypted, if requested). All password strings processed by Vertica require a null terminator, as is standard with any string in the Front End / Back End protocol.<br>GSS is special because Vertica doesn't touch the buffer it gets -- it defers to the GSS library instead. It is an error to send an extra null terminator in a GSS token message. |
 
 #### Query 'Q'
 
@@ -787,9 +798,9 @@ This section describes the detailed format of each message. Each message is clas
 |:-----------|:------------|
 | Byte1('Q') | Identifies the message as a simple query.            |
 | Int32      | Length of message contents in bytes, including self. |
-| String     | The query string itself.                             |
+| String     | The query string itself.  |
 
-#### SSLRequest '8'
+#### SSLRequest
 
 | Type       | Description |
 |:-----------|:------------|
@@ -836,8 +847,8 @@ This section describes the detailed format of each message. Each message is clas
                      <dd>
                         The backend would use the frontend's requested protocol version to find
                         the highest common protocol version in use for both frontend and
-                        backend, and send this effective protocol version back in a <a
-                           href="#parameterstatus">ParameterStatus</a> message, with parameter name
+                        backend, and send this <strong>effective</strong> protocol version back in a <a
+                           href="#parameterstatus-s">ParameterStatus</a> message, with parameter name
                         'protocol_version'. The frontend can use this value to enable/disable
                         functionalities.
                      </dd>
@@ -1035,14 +1046,14 @@ Currently recognized values for protocol_compat are "PG" or "VER" for Postgres a
 
 | Type       | Description |
 |:-----------|:------------|
-| Byte1('S') | Identifies the message as a Sync command.            |
-| Iength of message contents in bytes, including self. |
+| Byte1('S') | Identifies the message as a Sync command. |
+| Int32(4)   | Iength of message contents in bytes, including self. |
 
 #### Terminate 'X'
 
 | Type       | Description |
 |:-----------|:------------|
-| Byte1('X') | Identifies the message as a termination.             |
+| Byte1('X') | Identifies the message as a termination. |
 | Int32(4)   | Length of message contents in bytes, including self. |
 
 #### VerifiedFiles 'F'
@@ -1078,12 +1089,12 @@ Currently recognized values for protocol_compat are "PG" or "VER" for Postgres a
 
 | Type       | Description |
 |:-----------|:------------|
-| Byte1('R') | Identifies the message as an authentication request.                                              |
-| Int32(32)  | Length of message contents in bytes, including self.                                              |
-| Int32(5)   | Specifies that an MD5-encrypted password is required. password = MD5(MD5(password + user) + salt) |
-| Byte4      | The salt to use when encrypting the password.                                                     |
-| Int32      | The user salt length, must equal to 16.                                                           |
-| Byte16     | The user salt, but not used.                                                                      |
+| Byte1('R') | Identifies the message as an authentication request. |
+| Int32(32)  | Length of message contents in bytes, including self. |
+| Int32(5)   | Specifies that an MD5-encrypted password is required.<br>*password* = MD5(MD5(password + user) + salt) |
+| Byte4      | The salt to use when encrypting the password. |
+| Int32      | The user salt length, must equal to 16. |
+| Byte16     | The user salt, but not used. |
 
 #### AuthenticationGSS 'R'
 
@@ -1091,24 +1102,24 @@ Currently recognized values for protocol_compat are "PG" or "VER" for Postgres a
 |:-----------|:------------|
 | Byte1('R') | Identifies the message as an authentication request. |
 | Int32(8)   | Length of message contents in bytes, including self. |
-| Int32(7)   | Specifies that GSS authentication is required.       |
+| Int32(7)   | Specifies that GSS authentication is required. |
 
 #### AuthenticationGSSContinue 'R'
 
 | Type       | Description |
 |:-----------|:------------|
-| Byte1('R') | Identifies the message as an authentication request.        |
-| Int32      | Length of message contents in bytes, including self.        |
-| Int32(8)   | Specifies that GSS authentication continue is required.     |
+| Byte1('R') | Identifies the message as an authentication request. |
+| Int32      | Length of message contents in bytes, including self. |
+| Int32(8)   | Specifies that GSS authentication continue is required. |
 | Byte**n**  | GSS data, which should be passed into an authGSSClientStep. |
 
 #### AuthenticationPasswordExpired 'R'
 
 | Type       | Description |
 |:-----------|:------------|
-| Byte1('R')     | Identifies the message as an authentication request.                                                           |
-| Int32          | Length of message contents in bytes, including self.                                                           |
-| Int32(9)       | Specifies that the password is expired.                                                                        |
+| Byte1('R')     | Identifies the message as an authentication request. |
+| Int32          | Length of message contents in bytes, including self. |
+| Int32(9)       | Specifies that the password is expired. |
 | Int32\[**n**\] | A bunch of integers that represent some restrictions on the password (min/max length, character classes, etc). |
 
 #### AuthenticationPasswordChanged 'R'
@@ -1117,7 +1128,7 @@ Currently recognized values for protocol_compat are "PG" or "VER" for Postgres a
 |:-----------|:------------|
 | Byte1('R') | Identifies the message as an authentication request. |
 | Int32(8)   | Length of message contents in bytes, including self. |
-| Int32(10)  | Specifies that the password is changed.              |
+| Int32(10)  | Specifies that the password is changed. |
 
 #### AuthenticationPasswordGrace 'R'
 
@@ -1133,40 +1144,40 @@ Currently recognized values for protocol_compat are "PG" or "VER" for Postgres a
 |:-----------|:------------|
 | Byte1('R') | Identifies the message as an authentication request. |
 | Int32(8)   | Length of message contents in bytes, including self. |
-| Int32(11)  | Specifies that an OAuth access token is required.    |
+| Int32(12)  | Specifies that an OAuth access token is required.    |
 
 #### AuthenticationHashPassword 'R'
 
 | Type       | Description |
 |:-----------|:------------|
-| Byte1('R')   | Identifies the message as an authentication request.                                                |
-| Int32(32)    | Length of message contents in bytes, including self.                                                |
-| Int32(65536) | Specifies that a hashed password is required. password = SHA512(SHA512(password + userSalt) + salt) |
-| Byte4        | The salt to use when encrypting the password.                                                       |
-| Int32        | The user salt length, must equal to 16.                                                             |
-| Byte16       | The user salt.                                                                                      |
+| Byte1('R')   | Identifies the message as an authentication request. |
+| Int32(32)    | Length of message contents in bytes, including self. |
+| Int32(65536) | Specifies that a hashed password is required.<br>*password* = SHA512(SHA512(password + userSalt) + salt) |
+| Byte4        | The salt to use when encrypting the password. |
+| Int32        | The user salt length, must equal to 16. |
+| Byte16       | The user salt. |
 
 #### AuthenticationHashMD5Password 'R'
 
 | Type       | Description |
 |:-----------|:------------|
-| Byte1('R')   | Identifies the message as an authentication request.                                                    |
-| Int32(32)    | Length of message contents in bytes, including self.                                                    |
-| Int32(65541) | Specifies that a hashed MD5-encrypted password is required. password = MD5(MD5(password + user) + salt) |
-| Byte4        | The salt to use when encrypting the password.                                                           |
-| Int32        | The user salt length, must equal to 16.                                                                 |
-| Byte16       | The user salt, but not used.                                                                            |
+| Byte1('R')   | Identifies the message as an authentication request. |
+| Int32(32)    | Length of message contents in bytes, including self. |
+| Int32(65541) | Specifies that a hashed MD5-encrypted password is required.<br>*password* = MD5(MD5(password + user) + salt) |
+| Byte4        | The salt to use when encrypting the password. |
+| Int32        | The user salt length, must equal to 16. |
+| Byte16       | The user salt, but not used. |
 
 #### AuthenticationHashSHA512Password 'R'
 
 | Type       | Description |
 |:-----------|:------------|
-| Byte1('R')   | Identifies the message as an authentication request.                                                                 |
-| Int32(32)    | Length of message contents in bytes, including self.                                                                 |
-| Int32(66048) | Specifies that a hashed SHA512-encrypted password is required. password = SHA512(SHA512(password + userSalt) + salt) |
-| Byte4        | The salt to use when encrypting the password.                                                                        |
-| Int32        | The user salt length, must equal to 16.                                                                              |
-| Byte16       | The user salt.                                                                                                       |
+| Byte1('R')   | Identifies the message as an authentication request. |
+| Int32(32)    | Length of message contents in bytes, including self. |
+| Int32(66048) | Specifies that a hashed SHA512-encrypted password is required.<br>*password* = SHA512(SHA512(password + userSalt) + salt) |
+| Byte4        | The salt to use when encrypting the password. |
+| Int32        | The user salt length, must equal to 16. |
+| Byte16       | The user salt. |
 
 #### BackendKeyData 'K'
 
@@ -1213,7 +1224,7 @@ Currently recognized values for protocol_compat are "PG" or "VER" for Postgres a
 
 | Type       | Description |
 |:-----------|:------------|
-| Byte1('c') | Identifies the message as a Copy done response for "COPY FROM LOCAL FILES" command. Note: This is different from a [CopyDone](#copydone-c) frontend message. |
+| Byte1('c') | Identifies the message as a Copy done response for "COPY FROM LOCAL FILES" command.<br>Note: This is different from a [CopyDone](#copydone-c) frontend message. |
 | Int32(4)   | Length of message contents in bytes, including self. |
 
 #### CopyInResponse 'G'
@@ -1265,16 +1276,16 @@ Currently recognized values for protocol_compat are "PG" or "VER" for Postgres a
 
 | Type       | Description |
 |:-----------|:------------|
-| Byte1('N') | Identifies the message as a LoadBalance response. The backend <u>rejects</u> the frontend LoadBalance request. Note: This is different from a [NoticeResponse 'N'](#noticeresponse-n) message. |
+| Byte1('N') | Identifies the message as a LoadBalance response. The backend <u>rejects</u> the frontend LoadBalance request.<br>Note: This is different from a [NoticeResponse 'N'](#noticeresponse-n) message. |
 
 or
 
-|            |                                                                                                                |
-|------------|----------------------------------------------------------------------------------------------------------------|
+| Type       | Description |
+|:-----------|:------------|
 | Byte1('Y') | Identifies the message as a LoadBalance response. The backend <u>accepts</u> the frontend LoadBalance request. |
-| Int32      | Length of message contents in bytes, including self.                                                           |
-| Int32      | The port number of the load balance target.                                                                    |
-| String     | The host of the load balance target. The string is null terminated. This is a ip address, not a DNS name       |
+| Int32      | Length of message contents in bytes, including self. |
+| Int32      | The port number of the load balance target. |
+| String     | The host of the load balance target. The string is null terminated. This is an IP address, not a DNS name. |
 
 #### LoadFile 'H'
 
@@ -1371,13 +1382,13 @@ or
 | Int32 | The number of elements in the type mapping pool, which is an array. This pool is used for non-native types like GEOMETRY and GEOGRAPHY (They are backed by LONG VARBINARY native type). |
 | Then, for each type mapping element in the pool, there is the following: |  |
 | Int32 | Specifies the base object ID of the non-native data type. |
-| String | Specifies the base object ID of the non-native data type. |
+| String | Specifies the name of the non-native data type. |
 | Then, for each field in a row, there is the following: |  |
 | String | The field name. |
 | Int64 | If the field can be identified as a column of a specific table, the object ID of the table; otherwise zero. (denoted <strong><em>OID</em></strong> below). |
 | String | The schema name. Only sent if <strong><em>OID</em></strong> != 0. |
 | String | The table name. Only sent if <strong><em>OID</em></strong> != 0. |
-| Int16 | If the field can be identified as a column of a specific table, the attribute number of the column; otherwise zero. The <st<strong><em>and the</em></strong>attribute number</em></strong> uniquely identify each field within the scope of a RowDescription message. |
+| Int16 | If the field can be identified as a column of a specific table, the attribute number of the column; otherwise zero. The <strong><em>OID</em></strong> and the <strong><em>attribute number</em></strong> uniquely identify each field within the scope of a RowDescription message. |
 | Int16 | If the column is a complex type, the <strong><em>attribute number</em></strong> of the field that is considered to be the parent; otherwise zero.<br>For example, an <em>ARRAY[INT]</em> will have one attribute number representing the ARRAY, and another attribute number representing the INT it contains. The INT will have a Parent that refers to the ARRAY.<br><em>New in version 3.10</em>: Before version 3.10, it only returned fields that did not have a parent. |
 | Byte1 | '1' if the column uses the type mapping pool; '0' otherwise. |
 | Int32 | If the column uses the type mapping pool, specifies the position (0-indexed) in the type mapping pool. Otherwise, specifies the object ID of the column's data type. |
@@ -1393,7 +1404,7 @@ or
 
 | Type       | Description |
 |:-----------|:------------|
-| Byte1('F') | Identifies the message as a response to COPY FROM LOCAL command. The backend parses the file names out of the command, and sends them back to the frontend in this message. The frontend has to verify that these files exist and are readable before running the copy |
+| Byte1('F') | Identifies the message as a response to COPY FROM LOCAL command. The backend parses the file names out of the command, and sends them back to the frontend in this message. The frontend has to verify that these files exist and are readable before running the copy. |
 | Int32      | Length of message contents in bytes, including self. |
 | Int16      | The number of files (denoted ***N*** below). 0 if copy input is STDIN. |
 | String\[***N***\] | The name of each data file to load.  |
@@ -1416,8 +1427,8 @@ This section describes the fields that may appear in [ErrorResponse](#errorrespo
 
 | Identification token | Description  |
 |:---------------------|:------------|
-| C                    | Code: the SQLSTATE code for the error. |
-| D                    | Detail  |
+| C                    | Code: the five-character SQLSTATE code for the error. See the "SQL state list" in Vertica Documentation for a list of all the SQLSTATE classes and values defined by Vertica. |
+| D                    | Detail: additional information about the error message, in greater detail.  |
 | F                    | File: the file name of the source-code location where the error was reported.  |
 | H                    | Hint: an optional suggestion what to do about the problem. This is intended to differ from Detail in that it offers advice (potentially inappropriate) rather than hard facts. Might run to multiple lines. |
 | L                    | Line: the line number of the source-code location where the error was reported.  |
@@ -1427,23 +1438,24 @@ This section describes the fields that may appear in [ErrorResponse](#errorrespo
 | q                    | Internal query  |
 | R                    | Routine: the name of the source-code routine reporting the error. |
 | S                    | Severity: the field contents are ERROR, FATAL, or PANIC (in an error message), or WARNING, NOTICE, DEBUG, INFO, or LOG (in a notice message), or a localized translation of one of these. Always present.   |
-| V                    | Error code |
+| V                    | Error code: the numeric error code that Vertica reports. |
 | W                    | Where: an indication of the context in which the error occurred. |
+
 
 ## Data Collector utility
 
-Data Collector component ClientServerMessages (table V_INTERNAL.dc_client_server_messages) collects a subset of Client-Server Protocol Messages sent between the Front End and Back End. Not all protocol messages are currently logged by the Data Collector. Additionally, some messages has verbose data available.
+Data Collector component ClientServerMessages (table `V_INTERNAL.dc_client_server_messages`) collects a subset of Client-Server Protocol Messages sent between the Front End and Back End. Not all protocol messages are currently logged by the Data Collector. Additionally, some messages has verbose data available.
 
-#### Logged Frontend Messages
+#### Logged Frontend Messages (FE)
 
-| Message (Character D) | Contents logged  |
+| Message (Character ID) | Contents logged  |
 |:----------------------|:-----------------|
 | Query ('Q') | Masked Query String |
-| Parse ('P') |statement name:masked query string |
+| Parse ('P') |statement name: masked query string |
 | Bind ('B')  | (empty)|
 | Execute ('E') | portal name |
-| Close ('C') | prepared Statement/portal name |
-| Describe ('D') | prepared Statement/portal name |
+| Close ('C') | prepared statement/portal name |
+| Describe ('D') | prepared statement/portal name |
 | Flush ('H') |  (empty) |
 | Sync ('S') |  (empty) |
 | Terminate ('X') |  (empty) |
@@ -1453,9 +1465,10 @@ Data Collector component ClientServerMessages (table V_INTERNAL.dc_client_server
 | Load Balance Request ('?') |  (empty) |
 | Cancel Request ('!') | "Canceled Session" [canceled session ID] |
 
-#### Logged Backend Messages
 
-| Message (Character D) | Contents logged  |
+#### Logged Backend Messages (BE)
+
+| Message (Character ID) | Contents logged  |
 |:----------------------|:-----------------|
 | Parse Complete ('1') | (empty) |
 | Bind Complete ('2') | (empty) |
@@ -1463,13 +1476,19 @@ Data Collector component ClientServerMessages (table V_INTERNAL.dc_client_server
 | Portal Suspended ('s') | (empty) |
 | Parameter Description ('t') | (empty) |
 | No Data ('n') | (empty) |
-| Load Balance Response('Y'/'N') |"load balance reponse" [yes/no] |
-| Parameter Status ('S') |parameter name:parameter value |
-| Command Complete ('C') |tag 
+| Load Balance Response('Y'/'N') |"load balance response" [yes/no] |
+| Parameter Status ('S') |parameter name: parameter value |
+| Command Complete ('C') |tag |
 
 ### Setup and Usage
 
-This DC Table is turned on by default. As with other session DC tables, this table contains columns for 'time', 'node_name', 'session_id', 'user_id', and 'user_name'. The unique columns for this DC table are 'source', 'message_type', and 'contents'. The 'source' column describes whether the messages is a Frontend (FE) or Backend (BE) message. 'message_type' provides the character ID that distinguishes the type of message. Additionally, verbose messages will have a "+" appended to the single character message_type column. For example, the StartupRequest message KV pairs each are represented as a row in the table with the message_type "^+". The 'contents' column lists the set of contents being logged, if any, for that message type.
+This DC Table is turned on by default. As with other session DC tables, this table contains columns for 'time', 'node_name', 'session_id', 'user_id', and 'user_name'. The unique columns for this DC table are 'source', 'message_type', and 'contents'. 
+
+- The 'source' column describes whether the messages is a Frontend (FE) or Backend (BE) message.
+
+- The 'message_type' column provides the character ID that distinguishes the type of message. Additionally, verbose messages will have a "+" appended to the single character message_type column. For example, the StartupRequest message KV pairs each are represented as a row in the table with the message_type "^+". 
+
+- The 'contents' column lists the set of contents being logged, if any, for that message type.
 
 #### Sample Query
 ```sql
@@ -1481,7 +1500,23 @@ This DC Table is turned on by default. As with other session DC tables, this tab
 => SELECT clear_data_collector('ClientServerMessages');
 ```
 
-Support since Server v12.0SP3
+*Support since Server v12.0SP3*
+
+## Server Debug Logging
+ It is possible to enable the protocol debug log for the server. Execute the following SQL statement on the node to which the client connects:
+
+```sql
+=> SELECT set_debug_log('PROTOCOL','BASIC');
+```
+
+Now, the debug log messages in ***vertica.log*** can be filtered by the transaction ID.
+
+Then, execute the following SQL statement to disable the protocol debug log after executing the client program:
+
+```sql
+=> SELECT clear_debug_log('PROTOCOL','BASIC');
+```
+
 
 ## Summary of Changes since Protocol 3.0
 
@@ -1513,7 +1548,7 @@ Changes include:
 
 - Extended Complex Type support. Format change in the [StartupRequest](#startuprequest) message. New 'protocol_features' parameter supporting 'request_complex_types'.
 - Fall-Through Authentication Filtering: Format change in the [StartupRequest](#startuprequest) message. New 'auth_category' parameter.
-- [OAuth 2.0 Authentication](#oauth2-authentication): add [AuthenticationOAuth](#authenticationoauth-r) message.
+- [OAuth 2.0 Authentication](#protocol-312) enhancement: add [AuthenticationOAuth](#authenticationoauth-r) message.
 
 *Support since Server v12.0SP2*
 
@@ -1521,9 +1556,9 @@ Changes include:
 
 Changes include:
 
-- OAuth 2.0 support: Format change in the
+- [OAuth 2.0 Authentication](#oauth2-authentication) support: Format change in the
 [StartupRequest](#startuprequest)
-message. New oauth_access_token parameter.
+message. New 'oauth_access_token' parameter.
 
 *Support since Server v11.1SP1*
 
@@ -1539,6 +1574,7 @@ Changes include:
 Changes include:
 
 JDBC Complex Type Metadata support: Server changed the way it represents some column metadata in v_catalog.types table.
+
 *Support since Server v10.1SP1*
 
 ### Protocol 3.8
@@ -1555,21 +1591,22 @@ Changes include:
 
 - Client Backward compatibility (Server's protocol version is older than the client's): Format change in the [StartupRequest](#startuprequest)
 message.
-
-- The existing protocol_version parameter is now sent back to the client in a ParameterStatus message. It contains the protocol version supported by the server.
+  - The existing protocol_version parameter is now sent back to the client in a [ParameterStatus](#parameterstatus-s) message. It contains the protocol version supported by the server.
 
 *Support since Server v8.0*
 
-This has been verified by reviewing the startup method in the JDBC driver's protocol stream in the 9.1 source branch. The exact protocol version each was added is TBD.
+<br>
+
+> The following has been verified by reviewing the startup method in the JDBC driver's protocol stream in the 9.1 source branch. The exact protocol version each was added is TBD.
 
 ### Protocol 3.6
 
 Changes include:
 
-- Format change in the [StartupRequest](#startuprequest) message: New parameters added:
+- Format change in the [StartupRequest](#startuprequest) message. New parameters added:
   - mars
   - client_os_user_name
-- New new MARS related messages.
+- New MARS related messages.
 
 *Support since Server v7.2*
 
@@ -1583,7 +1620,7 @@ message
   - New [AuthenticationHashPassword](#authenticationhashpassword-r)
 message
 
-- Format change in the [StartupRequest](#startuprequest) message: New parameters added:
+- Format change in the [StartupRequest](#startuprequest) message. New parameters added:
   - protocol_version
   - binary_data_protocol
 
@@ -1609,4 +1646,4 @@ These are functional but buggy versions. Changes include:
 > - client_version 
 > - client_os
 
-*Support since Server v7.0*
+*Support protocol 3.4 since Server v7.0*
