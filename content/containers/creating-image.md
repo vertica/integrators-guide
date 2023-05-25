@@ -32,10 +32,10 @@ For additional container file guidance, refer to [Best practices for writing Doc
 
 ## Building
 
-The command to build the image is a `Makefile` target in the GitHub repository. Use the following command to initiate the build.
+The command to build the image is a `Makefile` target in the GitHub repository. Use the following command to initiate the build:
 
 ```
-make docker-build-vertica VERTICA_IMG=<name of image> MINIMAL_VERTICA_IMG=<YES|NO>
+$ make docker-build-vertica VERTICA_IMG=<name of image> MINIMAL_VERTICA_IMG=<YES|NO>
 ```
 
 Explanation and rationale about the contents of the Dockerfile is in the subsequent section.
