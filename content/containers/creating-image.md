@@ -14,7 +14,7 @@ For additional guidance, refer to the [Dockerfile](https://github.com/vertica/ve
 
 - Physical or virtual machine running x86 Linux
 - [Docker engine](https://docs.docker.com/engine/install/)
-- `make`
+- [`make` build tool](https://www.gnu.org/software/make/)
 - Vertica 11.0.1 or higher RPM
 - Local clone of the [vertica-kubernetes GitHub
   repository](https://github.com/vertica/vertica-kubernetes)
