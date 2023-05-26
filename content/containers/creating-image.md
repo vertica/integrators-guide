@@ -58,10 +58,10 @@ The Vertica image uses two different operating systems during the entire build p
 Assign your operating system selection to the `BUILD_OS_VERSION` or `BASE_OS_VERSION` variables:
 
 ```
-ARG BASE_OS_VERSION="focal-20220801"
-ARG BUILDER_OS_VERSION="7.9.2009"
+ARG BASE_OS_VERSION="lunar"
+ARG BUILDER_OS_VERSION="stream8"
 ```
-Both versions that you select must correspond to a docker tag for the OS images.
+Both versions that you select must correspond to a docker tag for the OS images. If a tag is one that is overridden then you must do a `docker pull` prior to building the image so that you use the latest one.
 
 When the `MINIMAL` argument is set to `YES`, the Dockerfile builds a smaller image. The smaller image omits large packages like Tensorflow and the Java runtime, which is required only to run Java UDx's. This will result in over 300MB (uncompressed) of savings. By default, we build the full image.
 
@@ -85,7 +85,7 @@ ARG S6_OVERLAY_VERSION=3.1.2.1
 The first stage is named **builder**. The **builder** stage generates the /opt/vertica directory structure by downloading the required packages and dependencies, then running the Vertica installer. The `FROM` command sets the base image for the **builder** and initiates the build of that stage. The `BUILDER_OS_VERSION` was previously selected as the image version to use for this stage. The following `FROM` command assigns the name **builder** to the first stage in the multistage build:
 
 ```
-FROM centos:centos${BUILDER_OS_VERSION} as builder
+FROM quay.io/centos/centos:${BUILDER_OS_VERSION} as builder
 ```
 
 #### Setting ARG Variables
@@ -176,8 +176,9 @@ Vertica and [Admintools](https://www.vertica.com/docs/latest/HTML/Content/Author
   && yum install -y \  
      cronie \  
      dialog \  
+     glibc \  
+     glibc-langpack-en \  
      iproute \  
-     mcelog \  
      openssh-server \  
      openssh-clients \  
      openssl \  
@@ -292,12 +293,7 @@ Ensure that everything under /home/dbadmin has the correct ownership and the ssh
 
 ### Second Stage
 
-The second and final build stage:
-
-- copies only the necessary build artifacts from the first stage to   reduce the number of layers in the final image.
-- creates environment variables.
-- exposes ports for networking.
-- adds metadata to the image.
+The second stage sets up the OS to be used for the final image. It updates the packages so that we are using the latest ones with all known security vulnerabilities addressed. This stage hands off to the third and final stage to remove any intermediate files needed for the package update.
 
 The beginning of the second stage is indicated by a row of **\#** characters in the Dockerfile.
 
@@ -308,6 +304,26 @@ As previously mentioned, the second stage uses Ubuntu as the operating system. Y
 ```
 FROM ubuntu:${BASE_OS_VERSION}
 ```
+
+### Third Stage
+
+The third and final build stage:
+
+- copies only the necessary build artifacts from the first two stages to reduce the number of layers in the final image.
+- creates environment variables.
+- exposes ports for networking.
+- adds metadata to the image.
+
+#### Set Up Stage
+
+Start with an empty image called scratch and copy everything over from the second stage:
+
+```
+FROM scratch
+COPY --from=initial / /
+```
+
+This gets rid of any intermediate layer that was created to update the OS packages.
 
 #### Additional ARG Variables
 
@@ -443,7 +459,6 @@ Vertica and [Admintools](https://www.vertica.com/docs/latest/HTML/Content/Author
   procps \  
   sysstat \  
   sudo \   
-  vim-tiny \
 ```
 ##### Install Java
 
@@ -455,11 +470,23 @@ Add the following only if you are building a minimal image:
   fi \
 ```
 
+##### Install vim
+
+Add the following for debugging purposes. The vim package can be quite old. Some security scanners may find vulnerabilities in it. For this reason, we don't include it in the NO_KEYS image, which should be used in environments with strict security requirements.
+
+```
+  && if [[ ${NO_KEYS^^} != "YES" ]] ; then \
+    apt-get install -y --no-install-recommends vim-tiny; \
+  fi \
+```
+
 ##### Cleanup package manager
 
 Remove any cached data brought in from the package manager:
 
 ```
+  && apt-get clean \
+  && apt-get autoremove \
   && rm -rf /var/lib/apt/lists/* \  
 ```
 
@@ -544,11 +571,12 @@ ENTRYPOINT ["/init"]
 
 ### Exposing Ports
 
-Expose port 5433 for Vertica, and 8443 for Vertica's HTTP server:
+Expose port 5433 for Vertica, 8443 for Vertica's HTTP server and 5444 for vertic agent:
 
 ```
 EXPOSE 5433  
 EXPOSE 8443
+EXPOSE 5444
 ```
 
 ### Configuring Image Access
