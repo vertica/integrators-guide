@@ -293,7 +293,7 @@ Ensure that everything under /home/dbadmin has the correct ownership and the ssh
 
 ### Second Stage
 
-The second stage sets up the OS to be used for the final image. It updates the packages so that we are using the latest ones with all known security vulnerabilities addressed. This stage hands off to the third and final stage to remove any intermediate files needed for the package update.
+The second stage prepares the OS for the final image. It updates packages to address all known security vulnerabilities. This stage hands off to the third and final stage to remove any intermediate files that are needed for the package update.
 
 The beginning of the second stage is indicated by a row of **\#** characters in the Dockerfile.
 
@@ -316,14 +316,14 @@ The third and final build stage:
 
 #### Set Up Stage
 
-Start with an empty image called scratch and copy everything over from the second stage:
+Start with an empty image called `scratch` and copy everything from the second stage:
 
 ```
 FROM scratch
 COPY --from=initial / /
 ```
 
-This gets rid of any intermediate layer that was created to update the OS packages.
+This removes any intermediate layers that were created to update the OS packages.
 
 #### Additional ARG Variables
 
@@ -472,7 +472,7 @@ Add the following only if you are building a minimal image:
 
 ##### Install vim
 
-Add the following for debugging purposes. The vim package can be quite old. Some security scanners may find vulnerabilities in it. For this reason, we don't include it in the NO_KEYS image, which should be used in environments with strict security requirements.
+Add the Vim text editor for debugging purposes. The `vim` package can be old, and some security scanners might find vulnerabilities in it. For this reason, it is not included it in the NO_KEYS image, which should be used in environments with strict security requirements.
 
 ```
   && if [[ ${NO_KEYS^^} != "YES" ]] ; then \
@@ -571,7 +571,7 @@ ENTRYPOINT ["/init"]
 
 ### Exposing Ports
 
-Expose port 5433 for Vertica, 8443 for Vertica's HTTP server and 5444 for vertic agent:
+Expose port 5433 for Vertica, 8443 for Vertica's HTTP server, and 5444 for Vertica's agent:
 
 ```
 EXPOSE 5433  
