@@ -1145,6 +1145,9 @@ Currently recognized values for protocol_compat are "PG" or "VER" for Postgres a
 | Byte1('R') | Identifies the message as an authentication request. |
 | Int32(8)   | Length of message contents in bytes, including self. |
 | Int32(12)  | Specifies that an OAuth access token is required.    |
+| String     | OAuth token URL                                      |
+| String     | OAuth Auth URL                                       |
+| String     | OAuth client ID                                      | 
 
 #### AuthenticationHashPassword 'R'
 
@@ -1521,10 +1524,11 @@ Then, execute the following SQL statement to disable the protocol debug log afte
 ## Summary of Changes since Protocol 3.0
 
 ### Protocol 3.15
-- Workload
-- Format change in [WriteFile](#writefile-o). 'protocol_features' parameter in [StartupRequest](#startuprequest) message support new feature '???'.
-- New protocol messages content logged by the DC Table?
-- OAuth updates?
+- Workload support. Format change in the [startupRequest](#startuprequest) message. New 'workload' parmeter allowing specification of workload name to be used by workload routing rules.
+- Format change in [WriteFile](#writefile-o) for ODBC driver. New 'protocol_features' parameter called 'extend-copy-reject-info' in [StartupRequest](#startuprequest) message allows ODBC driver users to properly get rejected row information for bulk loaded data through calls to SQLGetDiagRec().
+- New Frontend protocol messages logged in DC_Client_Server_Messages: [CopyData](#copydata-d), [CopyDone](#copydone-c), [CopyFail](#copyfail-f), [CopyError](#copyerror-e), [EndOfBatchRequest](#endofbatchrequest-j)
+- New Backend protocol messages logged in DC_Client_Server_Messages: [WriteFile](#writefile-o), [LoadFile](#loadfile-h), [VerifyFiles](#verifyfiles-f), [EndOfBatchResponse](#endofbatchresponse-j), [CopyDone](#copydone-c)
+- Format change in the [AuthenticationOAuth](#authenticationoauth-r) message to support OAuth browser workflow. 
 
 *Support since Server v23.3.0*
 
