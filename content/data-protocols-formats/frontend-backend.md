@@ -1467,6 +1467,11 @@ Data Collector component ClientServerMessages (table `V_INTERNAL.dc_client_serve
 | SSL Request ('*') |  (empty) |
 | Load Balance Request ('?') |  (empty) |
 | Cancel Request ('!') | "Canceled Session" [canceled session ID] |
+| Copy Data ('d') | (empty) |
+| Copy Done ('c') | (empty) |
+| Copy Error ('e') | (empty) |
+| Copy Fail ('f') | (empty) |
+| End of Batch Request ('j') | (empty) |
 
 
 #### Logged Backend Messages (BE)
@@ -1482,6 +1487,11 @@ Data Collector component ClientServerMessages (table `V_INTERNAL.dc_client_serve
 | Load Balance Response('Y'/'N') |"load balance response" [yes/no] |
 | Parameter Status ('S') |parameter name: parameter value |
 | Command Complete ('C') |tag |
+| Write File ('O') | (empty) |
+| Load File ('H') | (empty) |
+| Verify Files ('F') | (empty) |
+| End of Batch Response ('J') | (empty) |
+| Copy Done ('c') | (empty) |
 
 ### Setup and Usage
 
