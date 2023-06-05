@@ -453,6 +453,12 @@ In the [StartupRequest](#startuprequest), if the 'auth_category' parameter is sp
 
 If 'auth_category' parameter is not set, the server still check for the token in the 'oauth_access_token' parameter of [StartupRequest](#startuprequest) message.
 
+#### (Protocol 3.15)
+
+OAuth browser workflow
+
+TODO: explaination or an example message flow image
+
 ### Simple Query
 
 A simple query cycle is initiated by the frontend sending a [Query](#query-q) message to the backend. The message includes an SQL command (or commands) expressed as a text string. The backend then sends one or more response messages depending on the contents of the query command string, and finally a [ReadyForQuery](#readyforquery-z) response message. ReadyForQuery informs the frontend that it can safely send a new command.
@@ -1145,9 +1151,9 @@ Currently recognized values for protocol_compat are "PG" or "VER" for Postgres a
 | Byte1('R') | Identifies the message as an authentication request. |
 | Int32(8)   | Length of message contents in bytes, including self. |
 | Int32(12)  | Specifies that an OAuth access token is required.    |
-| String     | OAuth token URL                                      |
-| String     | OAuth Auth URL                                       |
-| String     | OAuth client ID                                      | 
+| String     | OAuth token URL. <em>New in version 3.15</em> |
+| String     | OAuth Auth URL. <em>New in version 3.15</em> |
+| String     | OAuth client ID. <em>New in version 3.15</em> | 
 
 #### AuthenticationHashPassword 'R'
 
@@ -1534,11 +1540,11 @@ Then, execute the following SQL statement to disable the protocol debug log afte
 ## Summary of Changes since Protocol 3.0
 
 ### Protocol 3.15
-- Workload support. Format change in the [startupRequest](#startuprequest) message. New 'workload' parmeter allowing specification of workload name to be used by workload routing rules.
+- Workload support. Format change in the [StartupRequest](#startuprequest) message. New 'workload' parmeter allowing specification of workload name to be used by workload routing rules.
 - Format change in [WriteFile](#writefile-o) for ODBC driver. New 'protocol_features' parameter called 'extend-copy-reject-info' in [StartupRequest](#startuprequest) message allows ODBC driver users to properly get rejected row information for bulk loaded data through calls to SQLGetDiagRec().
-- New Frontend protocol messages logged in DC_Client_Server_Messages: [CopyData](#copydata-d), [CopyDone](#copydone-c), [CopyFail](#copyfail-f), [CopyError](#copyerror-e), [EndOfBatchRequest](#endofbatchrequest-j)
-- New Backend protocol messages logged in DC_Client_Server_Messages: [WriteFile](#writefile-o), [LoadFile](#loadfile-h), [VerifyFiles](#verifyfiles-f), [EndOfBatchResponse](#endofbatchresponse-j), [CopyDone](#copydone-c)
-- Format change in the [AuthenticationOAuth](#authenticationoauth-r) message to support OAuth browser workflow. 
+- New [Frontend protocol messages](#logged-frontend-messages-fe) logged in DC_Client_Server_Messages table: [CopyData](#copydata-d), [CopyDone](#copydone-c), [CopyFail](#copyfail-f), [CopyError](#copyerror-e), [EndOfBatchRequest](#endofbatchrequest-j)
+- New [Backend protocol messages](#logged-backend-messages-be) logged in DC_Client_Server_Messages table: [WriteFile](#writefile-o), [LoadFile](#loadfile-h), [VerifyFiles](#verifyfiles-f), [EndOfBatchResponse](#endofbatchresponse-j), [CopyDone](#copydone-c)
+- [OAuth 2.0 Authentication](#protocol-315) enhancement: Format change in the [AuthenticationOAuth](#authenticationoauth-r) message to support OAuth browser workflow. 
 
 *Support since Server v23.3.0*
 
