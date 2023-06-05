@@ -1011,7 +1011,9 @@ This section describes the detailed format of each message. Each message is clas
                      <td>
                         <p>A JSON string of features requested by the driver. Each feature will return a ParameterStatus message. Currently supports the following features:</p>
 <ul>
-               <li>'request_complex_types' - false is the default. If set to true, server will return complex type metadata. Otherwise, complex types will be treated as long varchar.</li></ul><p>Example value: {"request_complex_types":true}</p>
+               <li>'request_complex_types': <em>false</em> is the default. If set to <em>true</em>, server will return complex type metadata. Otherwise, complex types will be treated as long varchar.</li>
+               <li>'extend-copy-reject-info': TODO</li>
+               </ul><p>Example value: {"request_complex_types":true}</p>
                      </td>
                   </tr>
                   <tr>
@@ -1019,6 +1021,12 @@ This section describes the detailed format of each message. Each message is clas
                      <td>
                         <p>A string representing the protocol that the driver is able to understand. Used in postgres compatibility. The server will try and determine the type of driver and which protocol to be used. If this parameter is provided, the server will defer to the value given instead of determining which protocol to use on its own. This may be used in conversion and extension of PG drivers to understand parts of the Vertica protocol.<br>
 Currently recognized values for protocol_compat are "PG" or "VER" for Postgres and Vertica respectively. If no parameter is passed, the server will attempt to determine the value based on other parameters provided.</p>
+                     </td>
+                  </tr>
+                  <tr>
+                     <td>workload</td>
+                     <td>
+                        <p>A string representing the workload name to be used by workload routing rules.</p>
                      </td>
                   </tr>
                </tbody>
@@ -1430,6 +1438,8 @@ or
 | Int32      | File length.  |
 | String     | File content. Note: If the command uses the RETURNREJECTED parameters, file content (i.e. rejected row numbers) comes in **little-endian** format. |
 
+TODO: WriteFile format when 'extend-copy-reject-info' is set
+
 ## Error and Notice Message Fields
 
 This section describes the fields that may appear in [ErrorResponse](#errorresponse-e) and [NoticeResponse](#noticeresponse-n) messages. Each field type has a single-byte identification token. Note that any given field type should appear at most once per message.
@@ -1540,11 +1550,12 @@ Then, execute the following SQL statement to disable the protocol debug log afte
 ## Summary of Changes since Protocol 3.0
 
 ### Protocol 3.15
+- [OAuth 2.0 Authentication](#protocol-315) enhancement: Format change in the [AuthenticationOAuth](#authenticationoauth-r) message to support OAuth browser workflow. 
 - Workload support. Format change in the [StartupRequest](#startuprequest) message. New 'workload' parmeter allowing specification of workload name to be used by workload routing rules.
 - Format change in [WriteFile](#writefile-o) for ODBC driver. New 'protocol_features' parameter called 'extend-copy-reject-info' in [StartupRequest](#startuprequest) message allows ODBC driver users to properly get rejected row information for bulk loaded data through calls to SQLGetDiagRec().
 - New [Frontend protocol messages](#logged-frontend-messages-fe) logged in DC_Client_Server_Messages table: [CopyData](#copydata-d), [CopyDone](#copydone-c), [CopyFail](#copyfail-f), [CopyError](#copyerror-e), [EndOfBatchRequest](#endofbatchrequest-j)
 - New [Backend protocol messages](#logged-backend-messages-be) logged in DC_Client_Server_Messages table: [WriteFile](#writefile-o), [LoadFile](#loadfile-h), [VerifyFiles](#verifyfiles-f), [EndOfBatchResponse](#endofbatchresponse-j), [CopyDone](#copydone-c)
-- [OAuth 2.0 Authentication](#protocol-315) enhancement: Format change in the [AuthenticationOAuth](#authenticationoauth-r) message to support OAuth browser workflow. 
+
 
 *Support since Server v23.3.0*
 
