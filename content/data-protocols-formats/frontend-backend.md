@@ -416,7 +416,6 @@ A client application should first configure the IDP and get the following parame
 
 - ***token_url***: API used by client to refresh the token. This URL is exposed by IDP and must be accessible from client.
 
-![Example message flow of OAuth authentication](/images/data-protocols-formats/frontent-backend/OAuth_Msg_flow.png)
 
 Then in the server, create an OAuth authentication record with above parameters, and grant it to the user.
 
@@ -1012,7 +1011,7 @@ This section describes the detailed format of each message. Each message is clas
                         <p>A JSON string of features requested by the driver. Each feature will return a ParameterStatus message. Currently supports the following features:</p>
 <ul>
                <li>'request_complex_types': <em>false</em> is the default. If set to <em>true</em>, server will return complex type metadata. Otherwise, complex types will be treated as long varchar.</li>
-               <li>'extend-copy-reject-info': <em>false</em> is the default. If set to <em>true</em>, server will return a modified format of the <a href="#writefile-o">WriteFile</a> message when the RETURNREJECTED keyword is used in a copy command. The modified format means that for each rejected row the server will return the rejected row number as int64, the length of the message as int32, and then the message itself as a string. This allows full diagnostic results from a failed copy command to be identified row by row.</li>
+               <li>'extend-copy-reject-info': <em>false</em> is the default. If set to <em>true</em>, server will return a modified format of the <a href="#writefile-o">WriteFile</a> message when the RETURNREJECTED keyword is used in a copy command. This allows full diagnostic results from a failed copy command to be identified row by row.</li>
                </ul><p>Example value: {"request_complex_types":true}</p>
                      </td>
                   </tr>
@@ -1436,7 +1435,7 @@ or
 | Int32      | Length of message contents in bytes, including self.  |
 | String     | A file name if the command uses the REJECTED DATA and/or EXCEPTIONS parameters. Empty if the command uses the RETURNREJECTED parameters.  |
 | Int32      | File length.  |
-| String     | File content. Note: If the command uses the RETURNREJECTED parameters, file content (i.e. rejected row numbers) comes in **little-endian** format. |
+| String     | File content (not null-terminated).<br>Note: If the command uses the RETURNREJECTED parameters, file content (i.e. rejected row numbers) comes in **little-endian** format. |
 
 The modified format when 'extend-copy-reject-info' in the [StartupRequest](#startuprequest) message is set to *true* for **each rejected row**:
 
@@ -1446,7 +1445,7 @@ The modified format when 'extend-copy-reject-info' in the [StartupRequest](#star
 | Int32      | Length of message contents in bytes, including self.  |
 | Int64     | The rejected row number.  |
 | Int32     | Rejected message length.  |
-| String    | Rejected message content. |
+| String    | Rejected message content (not null-terminated, not little-endian format). |
 
 
 ## Error and Notice Message Fields
