@@ -454,7 +454,7 @@ If 'auth_category' parameter is not set, the server still check for the token in
 
 #### (Protocol 3.15)
 
-OAuth browser workflow
+Format change in the [AuthenticationOAuth](#authenticationoauth-r) message to support OAuth browser workflow (i.e. Authorization Code Grant Type).
 
 TODO: explaination or an example message flow image
 
