@@ -406,7 +406,7 @@ When the client requests access to a server, this is the process:
 
 OAuth lets client applications verify themselves to and receive an OAuth access token from an identity provider (IDP) like Keycloak or Okta. These client applications can then pass the access token to authenticate to Vertica server as a substitute for username & password.
 
-A client application should first configure the IDP and get the following parameters:
+A client user should first configure the IDP and get the following parameters:
 
 - ***client_id***: ID of the confidential client (application) registered in IDP. This is used by server to call introspection API to retrieve user grants; and used by client to retrieve tokens.
 
@@ -419,7 +419,7 @@ A client application should first configure the IDP and get the following parame
 
 Then in the server, create an OAuth authentication record with above parameters, and grant it to the user.
 
-The client application call the IDP token API to retrieve the following parameters:
+The client application or user call the IDP token API to retrieve the following parameters:
 
 - ***access_token***: Access tokens are the thing that applications use to make connection requests on behalf of a user.
 
@@ -452,11 +452,36 @@ In the [StartupRequest](#startuprequest), if the 'auth_category' parameter is sp
 
 If 'auth_category' parameter is not set, the server still check for the token in the 'oauth_access_token' parameter of [StartupRequest](#startuprequest) message.
 
+<figure>
+  <img src="/images/data-protocols-formats/frontent-backend/OAuth_Msg_flow_312.png"                                   
+       title="Example message flow of OAuth authentication (Protocol 3.12)"
+       alt="Example message flow of OAuth authentication (Protocol 3.12)" />
+  <figcaption aria-hidden="true">Example message flow of OAuth authentication (Protocol 3.12)</figcaption>
+</figure>
+
 #### (Protocol 3.15)
 
-Format change in the [AuthenticationOAuth](#authenticationoauth-r) message to support OAuth browser workflow (i.e. Authorization Code Grant Type).
+In OAuth 2.0, the term “grant type” refers to the way an application gets an access token. OAuth 2.0 defines several grant types, including the authorization code flow, which requires the app launch a browser to begin the flow.
 
-TODO: explaination or an example message flow image
+New fields (Auth URL, Token URL, client_id) added in the [AuthenticationOAuth](#authenticationoauth-r) message to support OAuth browser workflow (i.e. Authorization Code grant type). 
+
+At a high level, the authorization code flow has the following steps:
+
+- The client application opens a browser to send the user to the OAuth server (Auth URL)
+- The user sees the authorization prompt and approves the app’s request
+- The user is redirected back to the client application with an authorization code in the query string
+- The client application exchanges the authorization code (with Token URL) for an access token
+
+*client_id* is required every time a HTTP request is issued to the IDP.
+*client_secret* is required only for requests to the Token URL, but it is not allowed to be sent by the server for any reason. So the client application needs to provide the *client_secret* to the IDP to retrieve an access token.
+
+<figure>
+  <img src="/images/data-protocols-formats/frontent-backend/OAuth_browser_Msg_flow.png"                                   
+       title="Example message flow of OAuth browser workflow (Protocol 3.15)"
+       alt="Example message flow of OAuth browser workflow" />
+  <figcaption aria-hidden="true">Example message flow of OAuth browser workflow (Protocol 3.15)</figcaption>
+</figure>
+
 
 ### Simple Query
 
