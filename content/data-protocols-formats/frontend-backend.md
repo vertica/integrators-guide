@@ -4,7 +4,7 @@ linkTitle: "Frontend and backend protocols"
 weight: 20
 ---
 
-Vertica uses a message-based protocol for communication between frontends and backends (clients and servers). The protocol is supported over TCP/IP sockets. This document describes version 3.14 of the protocol.
+Vertica uses a message-based protocol for communication between frontends and backends (clients and servers). The protocol is supported over TCP/IP sockets. This document describes version 3.15 of the protocol.
 
 For purposes of the protocol, the terms "backend" and "server" are interchangeable; likewise "frontend" and "client" are interchangeable. See [vertica-python](https://github.com/vertica/vertica-python) for a frontend implementation reference of the protocol.
 
@@ -406,7 +406,7 @@ When the client requests access to a server, this is the process:
 
 OAuth lets client applications verify themselves to and receive an OAuth access token from an identity provider (IDP) like Keycloak or Okta. These client applications can then pass the access token to authenticate to Vertica server as a substitute for username & password.
 
-A client application should first configure the IDP and get the following parameters:
+A client user should first configure the IDP and get the following parameters:
 
 - ***client_id***: ID of the confidential client (application) registered in IDP. This is used by server to call introspection API to retrieve user grants; and used by client to retrieve tokens.
 
@@ -416,11 +416,10 @@ A client application should first configure the IDP and get the following parame
 
 - ***token_url***: API used by client to refresh the token. This URL is exposed by IDP and must be accessible from client.
 
-![Example message flow of OAuth authentication](/images/data-protocols-formats/frontent-backend/OAuth_Msg_flow.png)
 
 Then in the server, create an OAuth authentication record with above parameters, and grant it to the user.
 
-The client application call the IDP token API to retrieve the following parameters:
+The client application or user call the IDP token API to retrieve the following parameters:
 
 - ***access_token***: Access tokens are the thing that applications use to make connection requests on behalf of a user.
 
@@ -452,6 +451,37 @@ In the [StartupRequest](#startuprequest), only access_token is required to be sp
 In the [StartupRequest](#startuprequest), if the 'auth_category' parameter is specified as "OAuth", the server will send the client an [AuthenticationOAuth](#authenticationoauth-r) message. The client will respond with a [Password](#password-p) message containing an OAuth access token. The backend validates token using OAuth Introspect query. In case the access token is valid and permissions are sufficient, the backend sends [AuthenticationOk](#authenticationok-r), otherwise it responds with an [ErrorResponse](#errorresponse-e). Token refresh flow can be triggered by frontend after the token validation (if token introspection fails).
 
 If 'auth_category' parameter is not set, the server still check for the token in the 'oauth_access_token' parameter of [StartupRequest](#startuprequest) message.
+
+<figure>
+  <img src="/images/data-protocols-formats/frontent-backend/OAuth_Msg_flow_312.png"                                   
+       title="Example message flow of OAuth authentication (Protocol 3.12)"
+       alt="Example message flow of OAuth authentication (Protocol 3.12)" />
+  <figcaption aria-hidden="true">Example message flow of OAuth authentication (Protocol 3.12)</figcaption>
+</figure>
+
+#### (Protocol 3.15)
+
+In OAuth 2.0, the term “grant type” refers to the way an application gets an access token. OAuth 2.0 defines several grant types, including the authorization code flow, which requires the app launch a browser to begin the flow.
+
+New fields (Auth URL, Token URL, client_id) added in the [AuthenticationOAuth](#authenticationoauth-r) message to support OAuth browser workflow (i.e. Authorization Code grant type). 
+
+At a high level, the authorization code flow has the following steps:
+
+- The client application opens a browser to send the user to the OAuth server (Auth URL)
+- The user sees the authorization prompt and approves the app’s request
+- The user is redirected back to the client application with an authorization code in the query string
+- The client application exchanges the authorization code (with Token URL) for an access token
+
+*client_id* is required every time a HTTP request is issued to the IDP.
+*client_secret* is required only for requests to the Token URL, but it is not allowed to be sent by the server for any reason. So the client application needs to provide the *client_secret* to the IDP to retrieve an access token.
+
+<figure>
+  <img src="/images/data-protocols-formats/frontent-backend/OAuth_browser_Msg_flow.png"                                   
+       title="Example message flow of OAuth browser workflow (Protocol 3.15)"
+       alt="Example message flow of OAuth browser workflow" />
+  <figcaption aria-hidden="true">Example message flow of OAuth browser workflow (Protocol 3.15)</figcaption>
+</figure>
+
 
 ### Simple Query
 
@@ -1003,8 +1033,11 @@ This section describes the detailed format of each message. Each message is clas
                   <tr>
                      <td>protocol_features</td>
                      <td>
-                        <p>A JSON string of features requested by the driver. Each feature will return a ParameterStatus message. Currently supports the following features:
-'request_complex_types' - false is the default. If set to true, server will return complex type metadata. Otherwise, complex types will be treated as long varchar. Example value: {"request_complex_types":true}</p>
+                        <p>A JSON string of features requested by the driver. Each feature will return a ParameterStatus message. Currently supports the following features:</p>
+<ul>
+               <li>'request_complex_types': <em>false</em> is the default. If set to <em>true</em>, server will return complex type metadata. Otherwise, complex types will be treated as long varchar.</li>
+               <li>'extend-copy-reject-info': <em>false</em> is the default. If set to <em>true</em>, server will return a modified format of the <a href="#writefile-o">WriteFile</a> message when the RETURNREJECTED keyword is used in a copy command. This allows full diagnostic results from a failed copy command to be identified row by row.</li>
+               </ul><p>Example value: {"request_complex_types":true}</p>
                      </td>
                   </tr>
                   <tr>
@@ -1012,6 +1045,12 @@ This section describes the detailed format of each message. Each message is clas
                      <td>
                         <p>A string representing the protocol that the driver is able to understand. Used in postgres compatibility. The server will try and determine the type of driver and which protocol to be used. If this parameter is provided, the server will defer to the value given instead of determining which protocol to use on its own. This may be used in conversion and extension of PG drivers to understand parts of the Vertica protocol.<br>
 Currently recognized values for protocol_compat are "PG" or "VER" for Postgres and Vertica respectively. If no parameter is passed, the server will attempt to determine the value based on other parameters provided.</p>
+                     </td>
+                  </tr>
+                  <tr>
+                     <td>workload</td>
+                     <td>
+                        <p>A string representing the workload name to be used by workload routing rules.</p>
                      </td>
                   </tr>
                </tbody>
@@ -1144,6 +1183,9 @@ Currently recognized values for protocol_compat are "PG" or "VER" for Postgres a
 | Byte1('R') | Identifies the message as an authentication request. |
 | Int32(8)   | Length of message contents in bytes, including self. |
 | Int32(12)  | Specifies that an OAuth access token is required.    |
+| String     | OAuth token URL. <em>New in version 3.15</em> |
+| String     | OAuth Auth URL. <em>New in version 3.15</em> |
+| String     | OAuth client ID. <em>New in version 3.15</em> | 
 
 #### AuthenticationHashPassword 'R'
 
@@ -1418,7 +1460,18 @@ or
 | Int32      | Length of message contents in bytes, including self.  |
 | String     | A file name if the command uses the REJECTED DATA and/or EXCEPTIONS parameters. Empty if the command uses the RETURNREJECTED parameters.  |
 | Int32      | File length.  |
-| String     | File content. Note: If the command uses the RETURNREJECTED parameters, file content (i.e. rejected row numbers) comes in **little-endian** format. |
+| String     | File content (not null-terminated).<br>Note: If the command uses the RETURNREJECTED parameters, file content (i.e. rejected row numbers) comes in **little-endian** format. |
+
+The modified format when 'extend-copy-reject-info' in the [StartupRequest](#startuprequest) message is set to *true* for **each rejected row**:
+
+| Type       | Description |
+|:-----------|:------------|
+| Byte1('O') | Identifies the message as a response to COPY FROM LOCAL ... RETURNREJECTED command.  |
+| Int32      | Length of message contents in bytes, including self.  |
+| Int64     | The rejected row number.  |
+| Int32     | Rejected message length.  |
+| String    | Rejected message content (not null-terminated, not little-endian format). |
+
 
 ## Error and Notice Message Fields
 
@@ -1463,6 +1516,11 @@ Data Collector component ClientServerMessages (table `V_INTERNAL.dc_client_serve
 | SSL Request ('*') |  (empty) |
 | Load Balance Request ('?') |  (empty) |
 | Cancel Request ('!') | "Canceled Session" [canceled session ID] |
+| Copy Data ('d') | (empty) |
+| Copy Done ('c') | (empty) |
+| Copy Error ('e') | (empty) |
+| Copy Fail ('f') | (empty) |
+| End of Batch Request ('j') | (empty) |
 
 
 #### Logged Backend Messages (BE)
@@ -1478,6 +1536,11 @@ Data Collector component ClientServerMessages (table `V_INTERNAL.dc_client_serve
 | Load Balance Response('Y'/'N') |"load balance response" [yes/no] |
 | Parameter Status ('S') |parameter name: parameter value |
 | Command Complete ('C') |tag |
+| Write File ('O') | (empty) |
+| Load File ('H') | (empty) |
+| Verify Files ('F') | (empty) |
+| End of Batch Response ('J') | (empty) |
+| Copy Done ('c') | (empty) |
 
 ### Setup and Usage
 
@@ -1518,6 +1581,16 @@ Then, execute the following SQL statement to disable the protocol debug log afte
 
 
 ## Summary of Changes since Protocol 3.0
+
+### Protocol 3.15
+- [OAuth 2.0 Authentication](#protocol-315) enhancement: Format change in the [AuthenticationOAuth](#authenticationoauth-r) message to support OAuth browser workflow. 
+- Workload support. Format change in the [StartupRequest](#startuprequest) message. New 'workload' parmeter allowing specification of workload name to be used by workload routing rules.
+- Format change in [WriteFile](#writefile-o) message when new 'protocol_features' parameter called 'extend-copy-reject-info' in [StartupRequest](#startuprequest) is set to true. Set to false by default on the server, and in 3.15 only set to true by ODBC driver. This allows the ODBC driver users to properly get rejected row information for bulk loaded data through calls to SQLGetDiagRec.
+- New [Frontend protocol messages](#logged-frontend-messages-fe) logged in DC_Client_Server_Messages table: [CopyData](#copydata-d), [CopyDone](#copydone-c), [CopyFail](#copyfail-f), [CopyError](#copyerror-e), [EndOfBatchRequest](#endofbatchrequest-j)
+- New [Backend protocol messages](#logged-backend-messages-be) logged in DC_Client_Server_Messages table: [WriteFile](#writefile-o), [LoadFile](#loadfile-h), [VerifyFiles](#verifyfiles-f), [EndOfBatchResponse](#endofbatchresponse-j), [CopyDone](#copydone-c)
+
+
+*Support since Server v23.3.0*
 
 ### Protocol 3.14
 
