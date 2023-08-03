@@ -1459,17 +1459,20 @@ or
 | Int32      | Length of message contents in bytes, including self.  |
 | String     | A file name if the command uses the REJECTED DATA and/or EXCEPTIONS parameters. Empty if the command uses the RETURNREJECTED parameters.  |
 | Int32      | File length.  |
-| String     | File content (not null-terminated).<br>Note: If the command uses the RETURNREJECTED parameters, file content (i.e. rejected row numbers) comes in **little-endian** format. |
+| String     | File content (not null-terminated).<br>Note: If the command uses the RETURNREJECTED parameters, file content (i.e. rejected row numbers) comes in **little-endian** Int64 format. |
 
-The modified format when 'extend-copy-reject-info' in the [StartupRequest](#startuprequest) message is set to *true* for **each rejected row**:
+The modified WriteFile format when 'extend_copy_reject_info' in the [StartupRequest](#startuprequest) message is set to *true* and the command uses the RETURNREJECTED parameters:
 
 | Type       | Description |
 |:-----------|:------------|
 | Byte1('O') | Identifies the message as a response to COPY FROM LOCAL ... RETURNREJECTED command.  |
 | Int32      | Length of message contents in bytes, including self.  |
-| Int64     | The rejected row number.  |
-| Int32     | Rejected message length.  |
-| String    | Rejected message content (not null-terminated, not little-endian format). |
+| String     | File name. Empty because the command uses the RETURNREJECTED parameters.  |
+| Int32      | File length.  |
+| Then, for each rejected row: |  |
+| Int64     | The rejected row number. **little-endian** format. |
+| Int32     | Rejected message length.  **little-endian** format. |
+| String    | Rejected message content (not null-terminated). |
 
 
 ## Error and Notice Message Fields
