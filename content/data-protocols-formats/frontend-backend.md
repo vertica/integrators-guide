@@ -1032,11 +1032,35 @@ This section describes the detailed format of each message. Each message is clas
                   <tr>
                      <td>protocol_features</td>
                      <td>
-                        <p>A JSON string of features requested by the driver. Each feature will return a ParameterStatus message. Currently supports the following features:</p>
-<ul>
-               <li>"request_complex_types": <em>false</em> is the default. If set to <em>true</em>, server will return complex type metadata. Otherwise, complex types will be treated as long varchar.</li>
-               <li>"extend_copy_reject_info": <em>false</em> is the default. If set to <em>true</em>, server will return a modified format of the <a href="#writefile-o">WriteFile</a> message when the RETURNREJECTED keyword is used in a copy command. This allows full diagnostic results from a failed copy command to be identified row by row.</li>
-               </ul><p>Example value: {"request_complex_types":true,"extend_copy_reject_info":false}</p>
+                        <p>A JSON string of features requested by the driver. All features are disabled by default. Each feature enabled by the server will return a ParameterStatus message. These features are not bind with specific protocol version range. Currently supports the following features:</p>
+                        <table>
+                           <thead>
+                            <tr>
+                              <th>
+                                <p>Feature name</p>
+                              </th>
+                              <th>
+                                <p>Description</p>
+                              </th>
+                              <th>
+                                <p>Support since</p>
+                              </th>
+                            </tr>
+                           </thead>
+                           <tbody>
+                            <tr>
+                              <td>request_complex_types</td>
+                              <td>If set to <em>true</em>, server will return complex type metadata. Otherwise, complex types will be treated as long varchar.</td>
+                              <td>Server v12.0SP2</td>
+                            </tr>
+                            <tr>
+                              <td>extend_copy_reject_info</td>
+                              <td>If set to <em>true</em>, server will return a modified format of the <a href="#writefile-o">WriteFile</a> message when the RETURNREJECTED keyword is used in a copy command. This allows full diagnostic results from a failed copy command to be identified row by row.</td>
+                              <td>Server v23.3.0</td>
+                            </tr>
+                           </tbody>
+                        </table>
+                        <p>Example value: {"request_complex_types":true,"extend_copy_reject_info":false}</p>
                      </td>
                   </tr>
                   <tr>
@@ -1182,9 +1206,9 @@ Currently recognized values for protocol_compat are "PG" or "VER" for Postgres a
 | Byte1('R') | Identifies the message as an authentication request. |
 | Int32(8)   | Length of message contents in bytes, including self. |
 | Int32(12)  | Specifies that an OAuth access token is required.    |
-| String     | OAuth token URL. <em>New in version 3.15</em> |
 | String     | OAuth Auth URL. <em>New in version 3.15</em> |
-| String     | OAuth client ID. <em>New in version 3.15</em> | 
+| String     | OAuth Token URL. <em>New in version 3.15</em> |
+| String     | OAuth Client ID. <em>New in version 3.15</em> | 
 
 #### AuthenticationHashPassword 'R'
 
@@ -1588,7 +1612,7 @@ Then, execute the following SQL statement to disable the protocol debug log afte
 - [OAuth 2.0 Authentication](#protocol-315) enhancement: Format change in the [AuthenticationOAuth](#authenticationoauth-r) message to support OAuth browser workflow. 
 - Workload support. Format change in the [StartupRequest](#startuprequest) message. New 'workload' parmeter allowing specification of workload name to be used by workload routing rules.
 - Format change in [VerifiedFiles](#verifiedfiles-f) message.
-- Format change in [WriteFile](#writefile-o) message when new 'protocol_features' parameter called 'extend-copy-reject-info' in [StartupRequest](#startuprequest) is set to true. Set to false by default on the server, and in 3.15 only set to true by ODBC driver. This allows the ODBC driver users to properly get rejected row information for bulk loaded data through calls to SQLGetDiagRec.
+- Format change in [WriteFile](#writefile-o) message when new 'protocol_features' parameter called 'extend-copy-reject-info' in [StartupRequest](#startuprequest) is set to true. In 3.15 only set to true by ODBC driver. This allows the ODBC driver users to properly get rejected row information for bulk loaded data through calls to SQLGetDiagRec.
 - New [Frontend protocol messages](#logged-frontend-messages-fe) logged in DC_Client_Server_Messages table: [CopyData](#copydata-d), [CopyDone](#copydone-c), [CopyFail](#copyfail-f), [CopyError](#copyerror-e), [EndOfBatchRequest](#endofbatchrequest-j)
 - New [Backend protocol messages](#logged-backend-messages-be) logged in DC_Client_Server_Messages table: [WriteFile](#writefile-o), [LoadFile](#loadfile-h), [VerifyFiles](#verifyfiles-f), [EndOfBatchResponse](#endofbatchresponse-j), [CopyDone](#copydone-c)
 
