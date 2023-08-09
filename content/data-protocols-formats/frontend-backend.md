@@ -300,6 +300,8 @@ A backend with load balancing enabled can redirect connections based on the conn
   
 To enable connection load balancing on the server side, please see Vertica documentation.
 
+*Workload routing* is different from connection load balancing, which happens after [authentication](#startup-message-and-authentication). The node the client connects to would forward traffic to the execution node. In other words, the connection node acts as a proxy between the client and the execution node.
+
 #### SSL session encryption
 
 Frontend/backend communications can be encrypted using TLS/SSL. This provides communication security in environments where attackers might be able to capture the session traffic.
