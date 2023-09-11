@@ -8,8 +8,7 @@ Vertica uses a message-based protocol for communication between frontends and ba
 
 For purposes of the protocol, the terms "backend" and "server" are interchangeable; likewise "frontend" and "client" are interchangeable. See [vertica-python](https://github.com/vertica/vertica-python) for a frontend implementation reference of the protocol.
 
-##### Questions?
-Contact the team at vertica-client@microfocus.com.
+
 
 ## Overview
 
@@ -300,6 +299,8 @@ To begin a session, a frontend opens a connection over TCP/IP to the server. Wit
 A backend with load balancing enabled can redirect connections based on the connection's origin. To initiate a connection load balancing, the frontend sends a [LoadBalanceRequest](#loadbalancerequest) message. The server then responds with a [LoadBalanceResponse](#loadbalanceresponse-yn) message, the first byte of the message containing ***Y*** or ***N***, indicating that it is willing or unwilling to perform load balancing, respectively. To continue after ***Y***, the frontend must create a new TCP socket, which connects to the new host/port specified in the [LoadBalanceResponse 'Y'](#loadbalanceresponse-yn) message. To continue  ***N***, send the usual [SSLRequest](#sslrequest) message and [Startup](#startuprequest) message and proceed without connection load balancing.
   
 To enable connection load balancing on the server side, please see Vertica documentation.
+
+*Workload routing* is different from connection load balancing, which happens after [authentication](#startup-message-and-authentication). The node the client connects to would forward traffic to the execution node. In other words, the connection node acts as a proxy between the client and the execution node.
 
 #### SSL session encryption
 
@@ -625,7 +626,7 @@ There are several cases in which the backend will send messages that are not spe
 
 [ParameterStatus](#parameterstatus-s)
 : ParameterStatus messages will be generated whenever the active value changes for any of the parameters the backend believes the frontend should know about. For example, when you do `SET SESSION AUTOCOMMIT ON | OFF`, you get back a ParameterStatus telling you the new value of autocommit.
-: At present Vertica supports a handful of parameters for which ParameterStatus will be generated, they are: *standard_conforming_strings*, *server_version*, *client_locale*, *client_label*, *long_string_types*, *protocol_version*, *auto_commit*, *mars*, *timezone*, *database_name*, *request_complex_types*, etc.
+: At present Vertica supports a handful of parameters for which ParameterStatus will be generated, they are: *standard_conforming_strings*, *server_version*, *client_locale*, *client_label*, *long_string_types*, *protocol_version*, *auto_commit*, *mars*, *timezone*, *database_name*, *request_complex_types*, *extend_copy_reject_info* etc.
 : More parameters might be added in the future. A frontend should simply ignore ParameterStatus for parameters that it does not understand or care about.
 
 ### Canceling Requests in Progress
@@ -1033,11 +1034,35 @@ This section describes the detailed format of each message. Each message is clas
                   <tr>
                      <td>protocol_features</td>
                      <td>
-                        <p>A JSON string of features requested by the driver. Each feature will return a ParameterStatus message. Currently supports the following features:</p>
-<ul>
-               <li>'request_complex_types': <em>false</em> is the default. If set to <em>true</em>, server will return complex type metadata. Otherwise, complex types will be treated as long varchar.</li>
-               <li>'extend-copy-reject-info': <em>false</em> is the default. If set to <em>true</em>, server will return a modified format of the <a href="#writefile-o">WriteFile</a> message when the RETURNREJECTED keyword is used in a copy command. This allows full diagnostic results from a failed copy command to be identified row by row.</li>
-               </ul><p>Example value: {"request_complex_types":true}</p>
+                        <p>A JSON string of features requested by the driver. All features are disabled by default. Each feature enabled by the server will return a ParameterStatus message. These features are not bind with specific protocol version range. Currently supports the following features:</p>
+                        <table>
+                           <thead>
+                            <tr>
+                              <th>
+                                <p>Feature name</p>
+                              </th>
+                              <th>
+                                <p>Description</p>
+                              </th>
+                              <th>
+                                <p>Support since</p>
+                              </th>
+                            </tr>
+                           </thead>
+                           <tbody>
+                            <tr>
+                              <td>request_complex_types</td>
+                              <td>If set to <em>true</em>, server will return complex type metadata. Otherwise, complex types will be treated as long varchar.</td>
+                              <td>Server v12.0SP2</td>
+                            </tr>
+                            <tr>
+                              <td>extend_copy_reject_info</td>
+                              <td>If set to <em>true</em>, server will return a modified format of the <a href="#writefile-o">WriteFile</a> message when the RETURNREJECTED keyword is used in a copy command. This allows full diagnostic results from a failed copy command to be identified row by row.</td>
+                              <td>Server v23.3.0</td>
+                            </tr>
+                           </tbody>
+                        </table>
+                        <p>Example value: {"request_complex_types":true,"extend_copy_reject_info":false}</p>
                      </td>
                   </tr>
                   <tr>
@@ -1100,7 +1125,7 @@ Currently recognized values for protocol_compat are "PG" or "VER" for Postgres a
 |:-----------|:------------|
 | Byte1('F') | Identifies the message as a response to [VerifyFiles 'F'](#verifyfiles-f) message. Provide a list of files that the backend can ask to load. |
 | Int32      | Length of message contents in bytes, including self.  |
-| Int16      | The number of files. 0 if copy input is STDIN.  |
+| Int32      | The number of files. 0 if copy input is STDIN.<br>Note: Before v3.15 this is a Int16 type.  |
 | Next, the following pair of fields appear for each file: |  |
 | String     | File name. The string is null terminated. |
 | Int64  | File content length in bytes.  |
@@ -1183,9 +1208,9 @@ Currently recognized values for protocol_compat are "PG" or "VER" for Postgres a
 | Byte1('R') | Identifies the message as an authentication request. |
 | Int32(8)   | Length of message contents in bytes, including self. |
 | Int32(12)  | Specifies that an OAuth access token is required.    |
-| String     | OAuth token URL. <em>New in version 3.15</em> |
 | String     | OAuth Auth URL. <em>New in version 3.15</em> |
-| String     | OAuth client ID. <em>New in version 3.15</em> | 
+| String     | OAuth Token URL. <em>New in version 3.15</em> |
+| String     | OAuth Client ID. <em>New in version 3.15</em> | 
 
 #### AuthenticationHashPassword 'R'
 
@@ -1460,17 +1485,20 @@ or
 | Int32      | Length of message contents in bytes, including self.  |
 | String     | A file name if the command uses the REJECTED DATA and/or EXCEPTIONS parameters. Empty if the command uses the RETURNREJECTED parameters.  |
 | Int32      | File length.  |
-| String     | File content (not null-terminated).<br>Note: If the command uses the RETURNREJECTED parameters, file content (i.e. rejected row numbers) comes in **little-endian** format. |
+| String     | File content (not null-terminated).<br>Note: If the command uses the RETURNREJECTED parameters, file content (i.e. rejected row numbers) comes in **little-endian** Int64 format. |
 
-The modified format when 'extend-copy-reject-info' in the [StartupRequest](#startuprequest) message is set to *true* for **each rejected row**:
+The modified WriteFile format when 'extend_copy_reject_info' in the [StartupRequest](#startuprequest) message is set to *true* and the command uses the RETURNREJECTED parameters:
 
 | Type       | Description |
 |:-----------|:------------|
 | Byte1('O') | Identifies the message as a response to COPY FROM LOCAL ... RETURNREJECTED command.  |
 | Int32      | Length of message contents in bytes, including self.  |
-| Int64     | The rejected row number.  |
-| Int32     | Rejected message length.  |
-| String    | Rejected message content (not null-terminated, not little-endian format). |
+| String     | File name. Empty because the command uses the RETURNREJECTED parameters.  |
+| Int32      | File length.  |
+| Then, for each rejected row: |  |
+| Int64     | The rejected row number. **little-endian** format. |
+| Int32     | Rejected message length.  **little-endian** format. |
+| String    | Rejected message content (not null-terminated). |
 
 
 ## Error and Notice Message Fields
@@ -1585,7 +1613,8 @@ Then, execute the following SQL statement to disable the protocol debug log afte
 ### Protocol 3.15
 - [OAuth 2.0 Authentication](#protocol-315) enhancement: Format change in the [AuthenticationOAuth](#authenticationoauth-r) message to support OAuth browser workflow. 
 - Workload support. Format change in the [StartupRequest](#startuprequest) message. New 'workload' parmeter allowing specification of workload name to be used by workload routing rules.
-- Format change in [WriteFile](#writefile-o) message when new 'protocol_features' parameter called 'extend-copy-reject-info' in [StartupRequest](#startuprequest) is set to true. Set to false by default on the server, and in 3.15 only set to true by ODBC driver. This allows the ODBC driver users to properly get rejected row information for bulk loaded data through calls to SQLGetDiagRec.
+- Format change in [VerifiedFiles](#verifiedfiles-f) message.
+- Format change in [WriteFile](#writefile-o) message when new 'protocol_features' parameter called 'extend-copy-reject-info' in [StartupRequest](#startuprequest) is set to true. In 3.15 only set to true by ODBC driver. This allows the ODBC driver users to properly get rejected row information for bulk loaded data through calls to SQLGetDiagRec.
 - New [Frontend protocol messages](#logged-frontend-messages-fe) logged in DC_Client_Server_Messages table: [CopyData](#copydata-d), [CopyDone](#copydone-c), [CopyFail](#copyfail-f), [CopyError](#copyerror-e), [EndOfBatchRequest](#endofbatchrequest-j)
 - New [Backend protocol messages](#logged-backend-messages-be) logged in DC_Client_Server_Messages table: [WriteFile](#writefile-o), [LoadFile](#loadfile-h), [VerifyFiles](#verifyfiles-f), [EndOfBatchResponse](#endofbatchresponse-j), [CopyDone](#copydone-c)
 
