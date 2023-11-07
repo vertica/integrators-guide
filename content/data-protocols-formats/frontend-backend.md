@@ -483,6 +483,8 @@ At a high level, the authorization code flow has the following steps:
   <figcaption aria-hidden="true">Example message flow of OAuth browser workflow (Protocol 3.15)</figcaption>
 </figure>
 
+#### (Protocol 3.16)
+New fields (scope, validate_hostname) added in the [AuthenticationOAuth](#authenticationoauth-r) message.
 
 ### Simple Query
 
@@ -1211,6 +1213,8 @@ Currently recognized values for protocol_compat are "PG" or "VER" for Postgres a
 | String     | OAuth Auth URL. <em>New in version 3.15</em> |
 | String     | OAuth Token URL. <em>New in version 3.15</em> |
 | String     | OAuth Client ID. <em>New in version 3.15</em> | 
+| String     | OAuth Scope. <em>New in version 3.16</em> |
+| String     | OAuth validate hostname. <em>New in version 3.16</em> |
 
 #### AuthenticationHashPassword 'R'
 
@@ -1609,6 +1613,11 @@ Then, execute the following SQL statement to disable the protocol debug log afte
 
 
 ## Summary of Changes since Protocol 3.0
+
+### Protocol 3.16
+- [OAuth 2.0 Authentication](#protocol-315) enhancement: Format change in the [AuthenticationOAuth](#authenticationoauth-r) message.
+
+*Support since Server v24.1.0*
 
 ### Protocol 3.15
 - [OAuth 2.0 Authentication](#protocol-315) enhancement: Format change in the [AuthenticationOAuth](#authenticationoauth-r) message to support OAuth browser workflow. 
