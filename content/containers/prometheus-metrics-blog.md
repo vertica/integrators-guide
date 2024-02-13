@@ -53,7 +53,9 @@ So far it consists of four dashboards(EON database only) that are public and ava
 - [Vertica Depot](https://grafana.com/grafana/dashboards/19914-vertica-depot-prometheus/): details about depot usage.
 - [Vertica Resource](https://grafana.com/grafana/dashboards/19916-vertica-resource-management-prometheus/) Management: details about user-defined and built-in resource pool usage.
 
-You can find all Vertica Prometheus dashboards on [Grafana](https://grafana.com/grafana/dashboards/) by typing vertica on the search bar.
+You can find all Vertica Prometheus dashboards on [Grafana](https://grafana.com/grafana/dashboards/) by typing vertica on the search bar:
+
+![Grafana dashboard](/images/containers/grafana-search.png)
 
 ## Setting up Prometheus and Grafana 
 
@@ -195,6 +197,7 @@ You can access Prometheus UI. Run the following command to expose prometheus  an
 ```
 kubectl port-forward svc/prometheus-operated 9090
 ```
+![Expose Grafana dashboard](/images/containers/expose-dashboard.png)
 
 Prometheus is running but cannot connect to Vertica pods yet. To allow it to discover Vertica service, we are going to install a serviceMonitor.
 Run this command to create a local manifest for the service monitor:
@@ -244,6 +247,7 @@ minikube kubectl -- apply -f service-monitor.yaml
 ```
 
 Wait a little and refresh Prometheus on the browser. You will now be able to query the metrics:
+![Query metrics screen](/images/containers/execute-queries.png)
 
 You can access Grafana UI. Run the following command to expose Grafana  and access the dashboard on `http://localhost:3000`:
 
@@ -255,6 +259,7 @@ Log in with the following credentials:
 
 Username: **admin**
 Password: **prom-operator**
+![Grafana dashboard](/images/containers/grafana-login.png)
 
 
 You would normally have to create a Prometheus data source in order for Grafana to connect to Prometheus but in this deployment, Grafana  is pre-configured to connect to the Prometheus installed above.
@@ -262,10 +267,14 @@ You would normally have to create a Prometheus data source in order for Grafana 
 Now, all that is left is to import the dashboards. First, we import [Vertica Overview](https://grafana.com/grafana/dashboards/19917-vertica-overview-prometheus/). Copy the dashboard ID and go to Grafana.
 
 
-Paste the ID in **Home** > **Dashboards** > **New** > **import** > **import via grafanana.com**.
+Paste the ID in **Home** > **Dashboards** > **New** > **import** > **import via grafanana.com**:
+
+![Import dashboard](/images/containers/import-dashboard.png)
 
 
 Load the dashboard and click on **Import**. You will be able to view the dashboard:
+
+![Grafana dashboard](/images/containers/view-dashboard.png)
 
 All the other dashboards can be imported the same way.
 
