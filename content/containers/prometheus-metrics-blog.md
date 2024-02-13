@@ -1,7 +1,7 @@
 ---
 title: "Scraping metrics with Prometheus"
 linkTitle: "Prometheus metrics"
-weight: 30
+weight: 40
 ---
 
 To scrape metrics from Vertica, you currently need to setup a SQL exporter.  This exporter issues queries against Vertica, taking data from various DC tables and virtual tables.  This can be costly as it needs to go through the query plan optimizer. For complicated queries, this might result in joins from different tables. In version 23.3.0, Vertica introduced in-database metrics. Vertica is already very rich in metrics with the various system and DC tables that it offers, but now you can get them cheaply with Prometheus in-database metrics.
