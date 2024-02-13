@@ -1,6 +1,6 @@
 ---
 title: "Scraping metrics with Prometheus"
-linkTitle: "Prometheus metrics"
+linkTitle: "Scraping Prometheus metrics"
 weight: 40
 ---
 

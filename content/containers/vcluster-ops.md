@@ -1,6 +1,6 @@
 ---
-title: "VClusterOps "
-linkTitle: "VClusterOps"
+title: "Client access with VClusterOps "
+linkTitle: "VClusterOps access"
 weight: 40
 ---
 
