@@ -4,9 +4,9 @@ linkTitle: "Creating a Vertica image"
 weight: 10
 ---
 
-{{% alert title="Note" color="warning" %}}
+{{% pageinfo color="primary" %}}
 This tutorial describes the Dockerfile for Vertica versions 23.4 and lower.
-{{% /alert %}}
+{{% /pageinfo %}}
 
 [Vertica on Kubernetes](https://www.vertica.com/docs/latest/HTML/Content/Authoring/Containers/Kubernetes/ContainerizedVerticaWithK8s.htm) deploys an [Eon Mode database](https://www.vertica.com/docs/latest/HTML/Content/Authoring/Eon/EonOverview.htm) in a Kubernetes StatefulSet. The [Vertica server image](https://hub.docker.com/r/vertica/vertica-k8s) is optimized for Kubernetes, using the minimum tools and libraries requried to containerize Vertica.
 
