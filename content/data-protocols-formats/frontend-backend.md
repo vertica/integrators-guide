@@ -447,6 +447,8 @@ The client application or user call the IDP token API to retrieve the following 
 
 In the [StartupRequest](#startuprequest), only access_token is required to be specified in **oauth_access_token** parameter, no client id/secret is included in the request. The 'user' parameter can be an empty string. The backend validates token using OAuth Introspect query. In case oauth_access_token is valid and permissions are sufficient, the backend sends [AuthenticationOk](#authenticationok-r), otherwise it responds with an [ErrorResponse](#errorresponse-e). Token refresh flow can be triggered by frontend after the token validation (if token introspection fails).
 
+> **Note**: It is not recommended for clients to implement this protocol version by default. [Protocol 3.12](#protocol-312) is the right way to pass oauth_access_token to servers. For backwards compatibility with v11.1SP1 - v12.0SP1 servers, clients can implement a parameter to include the oauth_access_token in the startup request.
+
 #### (Protocol 3.12)
 
 In the [StartupRequest](#startuprequest), if the 'auth_category' parameter is specified as "OAuth", the server will send the client an [AuthenticationOAuth](#authenticationoauth-r) message. The client will respond with a [Password](#password-p) message containing an OAuth access token. The backend validates token using OAuth Introspect query. In case the access token is valid and permissions are sufficient, the backend sends [AuthenticationOk](#authenticationok-r), otherwise it responds with an [ErrorResponse](#errorresponse-e). Token refresh flow can be triggered by frontend after the token validation (if token introspection fails).
@@ -579,7 +581,7 @@ Copy-local mode is initiated when the backend executes a `COPY FROM LOCAL FILES`
 
 Then the frontend should send a [VerifiedFile](#emptyqueryresponse-i) message specifying a list of input files that the backend can ask to load. In *copy-local-stdin* mode, this is an empty list. In *copy-local-file* mode, this must be a non-empty list, because sending an empty list of files will make server kill the session. If the backend does not send a ErrorResponse, it is ready to copy data from STDIN/files. The backend might send [ParameterStatus](#parameterstatus-s) messages, then
 
-- In *copy-local-file* mode, for each file to load, the backend sends a [LoadFile](#loadfile-h) message to ask for data from a file. The frontend should then send zero or more [CopyData](#copydata-d) messages, forming a stream of input data. The message boundaries are not required to have anything to do with row boundaries, although that is often a reasonable choice. The frontend should send a [EndOfBatchRequest](#endofbatchrequest-j) message to indicate that a batch of rows has been sent, and the frontend is expecting an acknowledgment and possibly rejected row descriptions from the backend. The backend should then send zero or more [WriteFile](#writefile-o) messages for rejected row descriptions (The file content are sent in chunks of 8192 bytes in multiple Writefile messages) and a [EndOfBatchResponse](#endofbatchresponse-j) message for acknowledgement of data loading from this file. When the backend finishes asking for data from all files, it sends a [CopyDoneResponse](#copydoneresponse-c) message.
+- In *copy-local-file* mode, for each file to load, the backend sends a [LoadFile](#loadfile-h) message to ask for data from a file. The frontend should then send zero or more [CopyData](#copydata-d) messages, forming a stream of input data. The message boundaries are not required to have anything to do with row boundaries, although that is often a reasonable choice. The frontend should send a [EndOfBatchRequest](#endofbatchrequest-j) message to indicate that a batch of rows has been sent, and the frontend is expecting an acknowledgment and possibly rejected row descriptions from the backend. The backend should then send zero or more [WriteFile](#writefile-o) messages for rejected row descriptions and a [EndOfBatchResponse](#endofbatchresponse-j) message for acknowledgement of data loading from this file. When the backend finishes asking for data from all files, it sends a [CopyDoneResponse](#copydoneresponse-c) message.
 
 <figure>  
  <img src="/images/data-protocols-formats/frontent-backend/CopyLocalFile_Msg_flow.png"
@@ -1489,15 +1491,15 @@ or
 | Int32      | Length of message contents in bytes, including self.  |
 | String     | A file name if the command uses the REJECTED DATA and/or EXCEPTIONS parameters. Empty if the command uses the RETURNREJECTED parameters.  |
 | Int32      | File length.  |
-| String     | File content (not null-terminated).<br>Note: If the command uses the RETURNREJECTED parameters, file content (i.e. rejected row numbers) comes in **little-endian** Int64 format. |
+| String     | File content (not null-terminated).<br><br>Note: If the command uses the RETURNREJECTED parameter, file content (i.e. rejected row numbers) comes in **little-endian** Int64 format. <br>If the command doesn't use the RETURNREJECTED parameter and file content are very large (>8192 bytes), then file content are sent in chunks of 8192 bytes in multiple Writefile messages. |
 
-The modified WriteFile format when 'extend_copy_reject_info' in the [StartupRequest](#startuprequest) message is set to *true* and the command uses the RETURNREJECTED parameters:
+The modified WriteFile format when 'extend_copy_reject_info' in the [StartupRequest](#startuprequest) message is set to *true* and the command uses the RETURNREJECTED parameter:
 
 | Type       | Description |
 |:-----------|:------------|
 | Byte1('O') | Identifies the message as a response to COPY FROM LOCAL ... RETURNREJECTED command.  |
 | Int32      | Length of message contents in bytes, including self.  |
-| String     | File name. Empty because the command uses the RETURNREJECTED parameters.  |
+| String     | File name. Empty because the command uses the RETURNREJECTED parameter.  |
 | Int32      | File length.  |
 | Then, for each rejected row: |  |
 | Int64     | The rejected row number. **little-endian** format. |
