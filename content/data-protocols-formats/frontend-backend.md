@@ -1411,7 +1411,6 @@ or
 | Int32      | Specifies the parameter type modifier.    |
 | Int16      | 1 if the column has a *NOT NULL* constraint; 0 otherwise.    |
 
-<a id="parameterstatus"></a>
 #### ParameterStatus 'S'
 
 | Type       | Description |
@@ -1443,7 +1442,6 @@ or
 | Int32(5)   | Length of message contents in bytes, including self.  |
 | Byte1      | Current backend transaction status indicator. Possible values are 'I' if idle (not in a transaction block); 'T' if in a transaction block; or 'E' if in a failed transaction block (queries will be rejected until block is ended). |
 
-<a id="rowdescription"></a>
 #### RowDescription 'T'
 
 | Type       | Description |
@@ -1461,7 +1459,7 @@ or
 | String | The schema name. Only sent if <strong><em>OID</em></strong> != 0. |
 | String | The table name. Only sent if <strong><em>OID</em></strong> != 0. |
 | Int16 | If the field can be identified as a column of a specific table, the attribute number of the column; otherwise zero. The <strong><em>OID</em></strong> and the <strong><em>attribute number</em></strong> uniquely identify each field within the scope of a RowDescription message. |
-| Int16 | If the column is a complex type, the <strong><em>attribute number</em></strong> of the field that is considered to be the parent; otherwise zero.<br>For example, an <em>ARRAY[INT]</em> will have one attribute number representing the ARRAY, and another attribute number representing the INT it contains. The INT will have a Parent that refers to the ARRAY.<br><em>New in version 3.10</em>: Before version 3.10, it only returned fields that did not have a parent. |
+| Int16 | If the column is a complex type, the <strong><em>attribute number</em></strong> of the field that is considered to be the parent; otherwise zero.<br>For example, an <em>ARRAY[INT]</em> will have one attribute number representing the ARRAY, and another attribute number representing the INT it contains. The INT will have a Parent that refers to the ARRAY.<br><br><em>New in version 3.10</em> (for JDBC only) & <em>in version 3.12</em> (for all drivers when 'request_complex_types' in the [StartupRequest](#startuprequest) message is set to *true*): Previously, it only returned fields that did not have a parent. |
 | Byte1 | '1' if the column uses the type mapping pool; '0' otherwise. |
 | Int32 | If the column uses the type mapping pool, specifies the position (0-indexed) in the type mapping pool. Otherwise, specifies the object ID of the column's data type. |
 | Int16 | The data type size. |
@@ -1617,11 +1615,13 @@ Then, execute the following SQL statement to disable the protocol debug log afte
 ## Summary of Changes since Protocol 3.0
 
 ### Protocol 3.16
+Changes include:
 - [OAuth 2.0 Authentication](#protocol-315) enhancement: Format change in the [AuthenticationOAuth](#authenticationoauth-r) message.
 
 *Support since Server v24.1.0*
 
 ### Protocol 3.15
+Changes include:
 - [OAuth 2.0 Authentication](#protocol-315) enhancement: Format change in the [AuthenticationOAuth](#authenticationoauth-r) message to support OAuth browser workflow. 
 - Workload support. Format change in the [StartupRequest](#startuprequest) message. New 'workload' parmeter allowing specification of workload name to be used by workload routing rules.
 - Format change in [VerifiedFiles](#verifiedfiles-f) message.
