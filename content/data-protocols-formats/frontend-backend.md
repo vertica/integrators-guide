@@ -4,7 +4,7 @@ linkTitle: "Frontend and backend protocols"
 weight: 20
 ---
 
-Vertica uses a message-based protocol for communication between frontends and backends (clients and servers). The protocol is supported over TCP/IP sockets. This document describes version 3.15 of the protocol.
+Vertica uses a message-based protocol for communication between frontends and backends (clients and servers). The protocol is supported over TCP/IP sockets. This document describes version 3.17 of the protocol.
 
 For purposes of the protocol, the terms "backend" and "server" are interchangeable; likewise "frontend" and "client" are interchangeable. See [vertica-python](https://github.com/vertica/vertica-python) for a frontend implementation reference of the protocol.
 
@@ -653,6 +653,8 @@ The normal, graceful termination procedure is that the frontend sends a [Termina
 
 In rare cases (such as an administrator-commanded database shutdown) the backend might disconnect without any frontend request to do so. In such cases the backend will attempt to send an [ErrorResponse](#errorresponse-e) or [NoticeResponse](#noticeresponse-n) message giving the reason for the disconnection before it closes the connection.
 
+### Session Transfer
+
 ## Message Data Types
 
 This section describes the base data types used in messages.
@@ -1032,7 +1034,7 @@ This section describes the detailed format of each message. Each message is clas
                   <tr>
                      <td>auth_category</td>
                      <td>
-                        <p>A string indicating the type of authentication the client is prepared to do. Recognized values are "User", "Kerberos" and "OAuth". Specify only one type at a time.</p>
+                        <p>A string indicating the type of authentication the client is prepared to do. Recognized values are "User", "Kerberos", "OAuth" and "SessionResume". Specify only one type at a time.</p>
                      </td>
                   </tr>
                   <tr>
@@ -1469,6 +1471,16 @@ or
 | Int16 | The [format code](#formats-and-format-codes) being used for the field. |
 
 
+#### SessionRedirect 'r'
+| Type       | Description |
+|:-----------|:------------|
+| Byte1('r') | Identifies the message as a session redirect command. |
+| Int32      | Length of message contents in bytes, including self. |
+| String | Host that this session is being redirected to. |
+| Int32 | Port that this session is being redirected to. |
+| Int64 | Length of session information, in bytes (this count does not include itself) (denoted ***n*** below). |
+| Byte***n*** | The value of session information to be passed to new host and port. |
+
 
 #### VerifyFiles 'F'
 
@@ -1613,6 +1625,12 @@ Then, execute the following SQL statement to disable the protocol debug log afte
 
 
 ## Summary of Changes since Protocol 3.0
+
+### Protocol 3.17
+Changes include:
+- [Session transfer](#session-transfer) support: add [SessionRedirect](#sessionredirect-r) message, new valid value "SessionResume" in [StartupRequest](#startuprequest) message 'auth_category' parameter.
+
+*Support since Server v2?.?.0*
 
 ### Protocol 3.16
 Changes include:
