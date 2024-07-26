@@ -1220,6 +1220,14 @@ Currently recognized values for protocol_compat are "PG" or "VER" for Postgres a
 | String     | OAuth Scope. <em>New in version 3.16</em> |
 | String     | OAuth validate hostname. <em>New in version 3.16</em> |
 
+#### AuthenticationSessionTransfer 'R'
+
+| Type       | Description |
+|:-----------|:------------|
+| Byte1('R') | Identifies the message as an authentication request. |
+| Int32(8)   | Length of message contents in bytes, including self. |
+| Int32(13)  | Specifies that session transfer info is required.    |
+
 #### AuthenticationHashPassword 'R'
 
 | Type       | Description |
@@ -1628,7 +1636,7 @@ Then, execute the following SQL statement to disable the protocol debug log afte
 
 ### Protocol 3.17
 Changes include:
-- [Session transfer](#session-transfer) support: add [SessionRedirect](#sessionredirect-r) message, new valid value "SessionResume" in [StartupRequest](#startuprequest) message 'auth_category' parameter.
+- [Session transfer](#session-transfer) support: add [SessionRedirect](#sessionredirect-r), [AuthenticationSessionTransfer](#authenticationsessiontransfer-r) messages; new valid value "SessionResume" in [StartupRequest](#startuprequest) message 'auth_category' parameter.
 
 *Support since Server v2?.?.0*
 
