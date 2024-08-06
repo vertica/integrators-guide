@@ -4,7 +4,7 @@ linkTitle: "Frontend and backend protocols"
 weight: 20
 ---
 
-Vertica uses a message-based protocol for communication between frontends and backends (clients and servers). The protocol is supported over TCP/IP sockets. This document describes version 3.17 of the protocol.
+Vertica uses a message-based protocol for communication between frontends and backends (clients and servers). The protocol is supported over TCP/IP sockets. This document describes latest version of the protocol.
 
 For purposes of the protocol, the terms "backend" and "server" are interchangeable; likewise "frontend" and "client" are interchangeable. See [vertica-python](https://github.com/vertica/vertica-python) for a frontend implementation reference of the protocol.
 
@@ -654,6 +654,23 @@ The normal, graceful termination procedure is that the frontend sends a [Termina
 In rare cases (such as an administrator-commanded database shutdown) the backend might disconnect without any frontend request to do so. In such cases the backend will attempt to send an [ErrorResponse](#errorresponse-e) or [NoticeResponse](#noticeresponse-n) message giving the reason for the disconnection before it closes the connection.
 
 ### Session Transfer
+When admin initiates session transfer request to the server:
+```sql
+SELECT pause_client_connections('subcluster_name', '{"config_key":"config_val"}');
+SELECT redirect_client_connections('subcluster_name', 'new_hostname_or_ip:port', '{"config_key":"config_val"}');
+``` 
+Server will pause all currently active client connections once the current transaction finishes and results are done being read, then the server sends a [SessionRedirect](#sessionredirect-r) message in order to redirect the client to a new node to resume the session.
+This feature is enabled when 'session_transfer_support' in the [StartupRequest](#startuprequest) message is set to *true*. 
+
+Once the client parses [SessionRedirect](#sessionredirect-r) message and get
+
+1. new host and port to reconnect to
+2. session information: a binary payload that is opaque to the client
+
+It can connect to the new node, go through load balancing and TLS negotiation, and send a new [StartupRequest](#startuprequest) message. In [StartupRequest](#startuprequest) message, 'auth_category' parameter should be set to "SessionResume". The server will send a 
+[AuthenticationSessionTransfer](#authenticationsessiontransfer-r) message and expect the client to send session information within a [Password](#password-p) message.
+
+<TODO: message flow graph>
 
 ## Message Data Types
 
@@ -1066,9 +1083,14 @@ This section describes the detailed format of each message. Each message is clas
                               <td>If set to <em>true</em>, server will return a modified format of the <a href="#writefile-o">WriteFile</a> message when the RETURNREJECTED keyword is used in a copy command. This allows full diagnostic results from a failed copy command to be identified row by row.</td>
                               <td>Server v23.3.0</td>
                             </tr>
+                            <tr>
+                              <td>session_transfer_support</td>
+                              <td>If set to <em>true</em>, server will send a <a href="sessionredirect-r">SessionRedirect</a> message when admin initiates session transfer request. Otherwise, client will be forcibly disconnected.</td>
+                              <td>Server v?.?.0</td>
+                            </tr>
                            </tbody>
                         </table>
-                        <p>Example value: {"request_complex_types":true,"extend_copy_reject_info":false}</p>
+                        <p>Example value: {"request_complex_types":true,"extend_copy_reject_info":false,"session_transfer_support":true}</p>
                      </td>
                   </tr>
                   <tr>
@@ -1487,7 +1509,7 @@ or
 | String | Host that this session is being redirected to. |
 | Int32 | Port that this session is being redirected to. |
 | Int64 | Length of session information, in bytes (this count does not include itself) (denoted ***n*** below). |
-| Byte***n*** | The value of session information to be passed to new host and port. |
+| Byte***n*** | The value of session information to be passed to the new host and port. |
 
 
 #### VerifyFiles 'F'
@@ -1634,13 +1656,16 @@ Then, execute the following SQL statement to disable the protocol debug log afte
 
 ## Summary of Changes since Protocol 3.0
 
-### Protocol 3.17
+### Protocol 3.16
 Changes include:
-- [Session transfer](#session-transfer) support: add [SessionRedirect](#sessionredirect-r), [AuthenticationSessionTransfer](#authenticationsessiontransfer-r) messages; new valid value "SessionResume" in [StartupRequest](#startuprequest) message 'auth_category' parameter.
+- [Session transfer](#session-transfer) support: 
+  - add [SessionRedirect](#sessionredirect-r), [AuthenticationSessionTransfer](#authenticationsessiontransfer-r) messages.
+  - new feature 'session_transfer_support' in [StartupRequest](#startuprequest) message 'protocol_features' parameter.
+  - new valid value "SessionResume" in [StartupRequest](#startuprequest) message 'auth_category' parameter.
 
 *Support since Server v2?.?.0*
 
-### Protocol 3.16
+
 Changes include:
 - [OAuth 2.0 Authentication](#protocol-315) enhancement: Format change in the [AuthenticationOAuth](#authenticationoauth-r) message.
 
