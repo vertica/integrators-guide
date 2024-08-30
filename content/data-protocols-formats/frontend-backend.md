@@ -672,6 +672,11 @@ It can connect to the new node, go through load balancing and TLS negotiation, a
 
 <TODO: message flow graph>
 
+Lastly, if admin wants to start allowing use of the paused subcluster again, resume it with:
+```sql
+SELECT resume_client_connections('subcluster_name', '{"config_key":"config_val"}');
+```
+
 ## Message Data Types
 
 This section describes the base data types used in messages.
